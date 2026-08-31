@@ -96,58 +96,10 @@ http://127.0.0.1:8001/
 
 Leave the terminal open while using the preview server. Press `Ctrl+C` to stop it.
 
-## Quick Start: macOS and Linux
-
-Run these commands in a terminal from the repository root.
-
-### 1. Create a Project Python Environment
-
-```sh
-python3 -m venv .venv
-```
-
-This creates a `.venv` folder containing Python packages only for this project. You only need to create it once.
-
-### 2. Install the Required Packages
-
-```sh
-./.venv/bin/python -m pip install -r ./docs/requirements.txt
-```
-
-### 3. Build the Website
-
-```sh
-./.venv/bin/sphinx-build -M html ./docs ./_build -j auto
-```
-
-Sphinx reads the source files from `docs/` and creates the finished website in `_build/html/`.
-
-### 4. Open the Built Website
-
-Open this file in a browser:
-
-```text
-_build/html/index.html
-```
-
-### Optional: Run a Local Preview Server
-
-```sh
-./.venv/bin/python -m http.server 8001 --directory ./_build/html
-```
-
-Then open:
-
-```text
-http://127.0.0.1:8001/
-```
-
-Press `Ctrl+C` in the terminal to stop the server.
-
 ## After You Edit Documentation
 
 1. Save changes to the relevant `.rst` file.
-2. Run the **Build the Website** command again for your operating system.
+2. Run the **Build the Website** command again.
 3. Refresh the browser page.
 
 ## Contributing changes
