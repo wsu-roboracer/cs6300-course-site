@@ -42,7 +42,7 @@ Build/Repair Manual (external link)
 
 1. Tutorial 7: Particle Filter Localization
 2. Tutorial 8: Pure Pursuit
-   - Link to RoboRacer's Lecture 10: Pure Pursuit (Unsure currently about this, check!)
+   - Link to RoboRacer's Lecture 10: Pure Pursuit
 3. Lab 6a: Waypoint Logger for Pure Pursuit
 4. Lab 6b: Pure Pursuit
 
@@ -57,14 +57,14 @@ Students follow this course path from their first visit through the final lab:
   -> Module D: Tutorial 7 -> Tutorial 8 -> Lab 6a -> Lab 6b
 ```
 
-Each tutorial is placed immediately before the lab that uses it. Any relevant RoborRacer's 
+Each tutorial is placed immediately before the lab that uses it. Any relevant RoboRacer's
 lecture is linked within the matching tutorial section.
 
 ## Build/Repair Manual Boundary
 
 The course site links to the Build/Repair Manual for any additional build or repair information.
-This is linked to keep the site course focused. Ideally students should not need to utilize the Build/
-Repair Manual.
+This is linked to keep the site course focused. Ideally students should not need to utilize the Build/Repair
+Manual.
 
 The course site retains only the lab-specific commands and instructions students need
 to complete course work on a pre-prepared robot.
@@ -76,9 +76,8 @@ and clear path throughout each module:
 1. Learn from the tutorials and consult the related linked lectures as needed
 2. Complete the related lab
 
-This removes the confusion of having to scroll and jump between sections of the site to figure out 
+This removes the confusion of having to scroll and jump between sections of the site to figure out
 the correct path to follow. It keeps all related tutorials and labs in the same module section. The
 removal of the "Setup" section and the transition to linked rather than embedded RoboRacer lectures
 prevents the need to maintain duplicate information that is copied or forked across sites. The removal
-of RoboRacer's modules, races, and final project makes students actual deliverables more clear.
-
+of RoboRacer's modules, races, and final project makes students' actual deliverables clearer.
