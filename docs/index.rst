@@ -157,7 +157,3 @@ If you are looking for the old Code page, you can find it `here <https://f1tenth
 .. * :ref:`genindex`
 .. * :ref:`modindex`
 .. * :ref:`search`
-
-.. note::
-
-   Deployment verification marker: `pages-main-push-test-20260916-145814`.
