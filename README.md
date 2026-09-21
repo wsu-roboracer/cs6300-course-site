@@ -4,6 +4,12 @@ This repository contains the source files for [RoboRacer](http://roboracer.ai)'s
 
 Web browsers cannot display `.rst` files as documentation pages. We use **Sphinx** to build the `.rst` source files into a website.
 
+## Live course site
+
+The course site is published automatically from pushes to `main` through GitHub Actions:
+
+https://wsu-roboracer.github.io/cs6300-course-site/
+
 ## Before You Start
 
 Install these programs if they are not already installed:
