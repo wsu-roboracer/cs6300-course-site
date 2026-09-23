@@ -151,6 +151,15 @@ If you are looking for the old Code page, you can find it `here <https://f1tenth
    support/acknowledgment
 
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Build/Repair Manual
+   :name: sec-build-repair-manual
+   :hidden:
+
+   Build/Repair Manual <https://wsu-roboracer.github.io/robot-build-manual/>
+
+
 .. Indices and tables
 .. ------------------
 ..
