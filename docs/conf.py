@@ -14,17 +14,13 @@ sys.path.append(os.path.abspath('extensions'))
 extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.todo',
-    'sphinx_copybutton',
-    'myst_parser'
+    'sphinx_copybutton'
 ]
 
 templates_path = ['_templates']
 
-# Student-facing Weber Lab 3 and Lab 4 guides are maintained as Markdown.
-source_suffix = {
-    '.rst': 'restructuredtext',
-    '.md': 'markdown',
-}
+# You can specify multiple suffix as a list of string: ['.rst', '.md']
+source_suffix = '.rst'
 source_encoding = 'utf-8-sig'
 
 # The master toctree document
