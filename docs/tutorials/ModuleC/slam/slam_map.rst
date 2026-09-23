@@ -311,3 +311,8 @@ After saving, the map can be used for:
 - Localization
 - Autonomous navigation
 - Path planning
+
+Additional Resources
+--------------------
+
+- `RoboRacer Lecture 9: Introduction to Graph-based SLAM <https://f1tenth-coursekit.readthedocs.io/en/latest/lectures/ModuleC/lecture09.html>`_

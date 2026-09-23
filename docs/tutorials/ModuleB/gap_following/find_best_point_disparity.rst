@@ -149,3 +149,8 @@ Pick a point halfway between two disparities.
 - Improves performance in cluttered or narrow environments.
 
 ✅ **Disparity-based selection is more robust in complex, tight environments!**
+
+Additional Resources
+--------------------
+
+- `RoboRacer Lecture 5: Follow the Gap: Obstacle Avoidance <https://f1tenth-coursekit.readthedocs.io/en/latest/lectures/ModuleB/lecture05.html>`_
