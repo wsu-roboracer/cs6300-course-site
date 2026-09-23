@@ -122,3 +122,8 @@ Thus, the vehicle will **reduce speed smoothly by 0.82 m/s**, instead of braking
 ✅ **The derivative term predicts risk before it happens**.
 
 ✅ **Results in smoother, more efficient speed adjustments**.
+
+Additional Resources
+--------------------
+
+- `RoboRacer Lecture 2: Automatic Emergency Braking <https://f1tenth-coursekit.readthedocs.io/en/latest/lectures/ModuleA/lecture02.html>`_

@@ -27,7 +27,7 @@ Total Points Possible: 100
 
 Note that the time intervals will need to be adjusted to your specific track.
 
-For example, for the Levine Loop at the University of Pennsylvania, **L = 7** and **X = 16**. A team completes 5 consecutive lap with a best lap time of 23.48 seconds. Their grade would be:
+For example, for the CAE hall Loop at the University of Pennsylvania, **L = 7** and **X = 16**. A team completes 5 consecutive lap with a best lap time of 23.48 seconds. Their grade would be:
 	
 	* 80 points for completing 3 laps 
 	* :math:`+` (5/7)*10 points for completing 7 consecutive laps

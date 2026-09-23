@@ -1,5 +1,6 @@
 alabaster==0.7.12
 astroid==2.4.2
+attrs==20.3.0
 Babel==2.9.0
 certifi==2020.11.8
 chardet==3.0.4
@@ -10,12 +11,16 @@ isort==5.6.4
 Jinja2==2.11.2
 lazy-object-proxy==1.4.3
 MarkupSafe==1.1.1
+markdown-it-py==0.6.2
 mccabe==0.6.1
+mdit-py-plugins==0.2.6
+myst-parser==0.13.7
 packaging==20.7
 Pygments==2.7.2
 pylint==2.6.0
 pyparsing==2.4.7
 pytz==2020.4
+PyYAML==6.0.3
 requests==2.25.0
 six==1.15.0
 snowballstemmer==2.0.0

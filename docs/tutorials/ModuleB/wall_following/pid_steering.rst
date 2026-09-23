@@ -213,3 +213,8 @@ This prevents:
 ✅ **Lookahead distance helps navigate curves safely**.
 
 ✅ **Speed adjustment based on steering angle improves safety**.
+
+Additional Resources
+--------------------
+
+- `RoboRacer Lecture 4: Laplace Domain Dynamics and PID <https://f1tenth-coursekit.readthedocs.io/en/latest/lectures/ModuleB/lecture04.html>`_
