@@ -81,7 +81,7 @@ Prerequisites
 Before starting, make sure you have:
 
 - **A saved map** — completed the SLAM tutorial with ``lab_map.pgm`` and ``lab_map.yaml`` in ``~/f1tenth_ws/src/f1tenth_system/f1tenth_stack/maps/``
-- **Nav2 installed** — completed the :ref:`doc_setup_nav2` setup
+- **Nav2 installed** — completed the Nav2 setup
 - **Workspace rebuilt after saving the map** — Nav2 reads map files from the install directory, not the source directory. If you haven't rebuilt since saving your map, run:
 
   .. code-block:: bash

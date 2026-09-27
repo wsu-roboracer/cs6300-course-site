@@ -27,7 +27,7 @@ source_encoding = 'utf-8-sig'
 master_doc = 'index'
 
 # General information about the project
-project = 'RoboRacer - Learn'
+project = 'Student Course Site'
 copyright = '2025, Weber State University. Based on RoboRacer (CC-BY-NC-SA 4.0)'
 author = 'Weber State University'
 
@@ -48,7 +48,17 @@ if env_tags != None:
 language = os.getenv('READTHEDOCS_LANGUAGE', 'en')
 is_i18n = tags.has('i18n')
 
-exclude_patterns = ['_build']
+exclude_patterns = [
+    '_build',
+    'assignments/**',
+    'getting_started/**',
+    'lectures/**',
+    'overview/**',
+    'setup/**',
+    'support/**',
+    'tutorials/ModuleD/particle_filter/particle_filter_lauch.rst',
+    'weber_assignments/labs/index.rst',
+]
 
 
 # Pygments (syntax highlighting) style to use
@@ -71,10 +81,11 @@ html_theme_options = {
     # 'analytics_id': '',
     # 'sticky_navigation': True  # Set to False to disable the sticky nav while scrolling.
     'logo_only': False,  # if we have a html_logo below, this shows /only/ the logo with no title text
-    'collapse_navigation': True,  # Collapse navigation (True hides sections until expanded)
+    'collapse_navigation': False,  # Keep every module tree available for the sidebar toggle controls.
+    'includehidden': True,  # Include nested module toctrees so they can be expanded from any page.
     'prev_next_buttons_location': 'bottom',
     # 'display_version': True,  # Display the docs version
-    'navigation_depth': 3,  # Depth of the headers shown in the navigation bar
+    'navigation_depth.\.venv\Scripts\sphinx-build.exe -M html .\docs .\_build -j auto': 3,  # Depth of the headers shown in the navigation bar
     # 'titles_only': True,  # Show only document titles in the sidebar (hide section headings)
 }
 

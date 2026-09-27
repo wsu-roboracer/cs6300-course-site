@@ -11,4 +11,6 @@ This module covers reactive navigation methods including wall following and gap 
    :name: sec-moduleb
 
    wall_following/index
+   ../../weber_assignments/labs/lab3
    gap_following/index
+   ../../weber_assignments/labs/lab4

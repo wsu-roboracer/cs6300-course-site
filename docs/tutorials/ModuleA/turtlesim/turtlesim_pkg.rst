@@ -295,3 +295,8 @@ Summary
 -------
 
 You have successfully created a custom ROS 2 package that controls the turtlesim simulator. This demonstrates the fundamental concepts of ROS 2 package creation, node development, and topic-based communication.
+
+Additional Resources
+--------------------
+
+- `RoboRacer Lecture 1: Introduction to Autonomous Driving <https://f1tenth-coursekit.readthedocs.io/en/latest/lectures/ModuleA/lecture01.html>`_

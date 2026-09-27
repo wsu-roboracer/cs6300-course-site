@@ -1,1 +1,116 @@
 /* Custom CSS for RoboRacer documentation */
+
+.sidebar-toggle {
+  position: fixed;
+  top: 12px;
+  left: 248px;
+  z-index: 301;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transform: none;
+}
+
+.sidebar-toggle:hover,
+.sidebar-toggle:focus {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.sidebar-toggle-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  background: #fff;
+  transition: width 0.15s ease;
+}
+
+.sidebar-toggle-line:nth-child(2) {
+  width: 15px;
+}
+
+.sidebar-toggle-line:nth-child(3) {
+  width: 18px;
+}
+
+.wy-side-nav-search .icon-home,
+.wy-side-nav-search .version {
+  position: relative;
+  left: -20px;
+}
+
+.sidebar-rail {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 300;
+  display: none;
+  align-items: center;
+  flex-direction: column;
+  width: 48px;
+  padding-top: 60px;
+  background: #343131;
+}
+
+.sidebar-rail-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.sidebar-rail-button:hover,
+.sidebar-rail-button:focus {
+  background: #4e4a4a;
+  color: #fff;
+}
+
+body.sidebar-collapsed .wy-nav-side {
+  left: -300px;
+}
+
+body.sidebar-collapsed .wy-nav-content-wrap {
+  margin-left: 48px;
+}
+
+body.sidebar-collapsed .sidebar-toggle {
+  left: 0;
+  background: #343131;
+  border-radius: 0;
+}
+
+body.sidebar-collapsed .sidebar-toggle-line,
+body.sidebar-collapsed .sidebar-toggle-line:nth-child(2),
+body.sidebar-collapsed .sidebar-toggle-line:nth-child(3) {
+  width: 20px;
+}
+
+body.sidebar-collapsed .sidebar-rail {
+  display: flex;
+}
+
+@media screen and (max-width: 768px) {
+  .sidebar-toggle,
+  .sidebar-rail {
+    display: none;
+  }
+}
