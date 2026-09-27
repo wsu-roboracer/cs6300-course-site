@@ -30,4 +30,45 @@ For additional help, see the linked RoboRacer's lectures under "Additional Resou
    :name: sec-build-repair-manual
    :hidden:
 
+   weber_assignments/labs/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Assignments
+   :name: sec-assignments
+   :hidden:
+
+   assignments/labs/index
+   assignments/races/index
+   assignments/final_project
+   assignments/grading
+   
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Support
+   :name: sec-support-contact
+   :hidden:
+
+   press/logos
+   support/contact
+   support/acknowledgment
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Build/Repair Manual
+   :name: sec-build-repair-manual
+   :hidden:
+
+   Build/Repair Manual <https://wsu-roboracer.github.io/robot-build-manual/>
+
+
+.. Indices and tables
+.. ------------------
+..
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
    Build/Repair Manual <https://wsu-roboracer.github.io/robot-build-manual/>
