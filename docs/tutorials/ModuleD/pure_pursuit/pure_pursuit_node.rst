@@ -121,3 +121,9 @@ Troubleshooting
      - Particle filter may have diverged — re-set initial pose in RViz2
    * - No waypoints file found
      - Re-run waypoint recording; confirm path in ``pure_pursuit.yaml``
+
+
+Additional Resources
+--------------------
+
+- `RoboRacer Lecture 10: Pure Pursuit <https://f1tenth-coursekit.readthedocs.io/en/latest/lectures/ModuleD/lecture10.html>`_

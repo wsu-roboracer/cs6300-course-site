@@ -4,13 +4,13 @@
 Race 1
 ======================
 
-**Track:** You want to choose a track that is a closed loop. At Penn, we have the students race around the hallways in the Levine building. 
+**Track:** You want to choose a track that is a closed loop. At Penn, we have the students race around the hallways in the CAE hall building.
 
 .. figure:: img/levine_track.jpg
 	:align: center
 	:width: 300px
 
-	The hallways on the second floor of the Levine buildling form a rectangular track.
+	The hallways on the second floor of the CAE hall buildling form a rectangular track.
  
 **Race Prep:** Teams should be given the track beforehand so they can practice on their own time.
 

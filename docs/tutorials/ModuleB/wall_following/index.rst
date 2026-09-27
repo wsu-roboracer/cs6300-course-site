@@ -10,4 +10,3 @@ Tutorial 3 - Wall Following
    theory
    wall_follow_package
    pid_steering
-

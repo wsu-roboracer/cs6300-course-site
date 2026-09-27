@@ -1,9 +1,11 @@
 .. _doc_moduleA:
 
 
-Module A: Introduction to ROS, RoboRacer
-========================================
-The first module goes over the some of the basics required to understand and control the RoboRacer Autonomous Vehicle System. 
+Module A: Introduction to ROS 2 & Autonomous Driving Foundations
+==================================================================
+
+Learn ROS 2 fundamentals and Automatic Emergency Braking before completing
+the related Weber labs.
 
 
 .. toctree::
@@ -11,4 +13,6 @@ The first module goes over the some of the basics required to understand and con
    :name: sec-modulea
 
    turtlesim/index
+   ../../weber_assignments/labs/lab1
    aeb/index
+   ../../weber_assignments/labs/lab2
