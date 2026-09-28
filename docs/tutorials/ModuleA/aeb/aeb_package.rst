@@ -1,12 +1,12 @@
-.. _doc_tutorials_aeb_package:
+﻿.. _doc_tutorials_aeb_package:
 
 AEB Package Creation
-===========
+====================
 
 To set up your safety package within the driver stack container and prevent the roboracer from colliding with objects in front of it, follow these steps.
 
 1️⃣ Create the Safety Package
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Inside the driver stack container, navigate to your ROS 2 workspace ``~/f1tenth_ws/src`` and create a new package:
 
@@ -24,7 +24,7 @@ Inside the driver stack container, navigate to your ROS 2 workspace ``~/f1tenth_
 
 
 2️⃣ Modify package.xml
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 Ensure ``package.xml`` includes dependencies like ``rclpy``, ``sensor_msgs``, and ``std_msgs``. Open ``package.xml`` and add:
 
@@ -44,7 +44,7 @@ If you're using C++ instead of Python, also ensure you have:
 
 
 3️⃣ Modify CMakeLists.txt (If Using C++)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you're using C++, modify ``CMakeLists.txt`` to include:
 
@@ -58,7 +58,7 @@ Ensure the ``add_executable`` or ``ament_target_dependencies`` includes the nece
 
 
 4️⃣ Install Dependencies Using rosdep
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Run the following to install missing dependencies:
 
@@ -69,7 +69,7 @@ Run the following to install missing dependencies:
 
 
 5️⃣ Implement the Safety Node
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You'll create a safety node that listens to LiDAR data (``/scan``) and publishes a safety brake command if an object is too close.
 
@@ -136,7 +136,7 @@ Create a file inside ``safety_package/safety_node.py``:
 
 
 6️⃣ Make It Executable
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 Modify ``setup.py`` inside ``safety_package``:
 
@@ -150,7 +150,7 @@ Modify ``setup.py`` inside ``safety_package``:
 
 
 7️⃣ Build & Run
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 Run the following:
 

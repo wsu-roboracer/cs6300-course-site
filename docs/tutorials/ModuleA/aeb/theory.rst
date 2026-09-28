@@ -1,17 +1,17 @@
-.. _doc_tutorials_aeb_theory:
+﻿.. _doc_tutorials_aeb_theory:
 
 AEB Theory of Operation
 =============================
 
 1️⃣ Learning Goals
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 - Using the ``LaserScan`` message in ROS 2
 - Time to Collision (TTC)
 - Safety critical systems
 
 2️⃣ Overview
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 The goal of this lab is to develop a safety node for the race cars that will stop the car from collision when travelling at higher velocities. We will implement Time to Collision (TTC) using the ``LaserScan`` message in the simulator.
 
@@ -213,7 +213,7 @@ The exact thresholds vary by system, but the *decision logic* is the same.
 ---
 
 5️⃣ Time to Collision Using Laser Scan Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When working with LiDAR, we don’t evaluate just one distance. Instead, we evaluate **many possible collision paths at once**, one for each scan beam.
 
@@ -310,7 +310,7 @@ This prevents false braking from:
 ---
 
 Using TTC for AEB Decisions
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After TTC is computed for all beams:
 
@@ -341,7 +341,7 @@ This method allows the system to respond to:
 
 For this lab, you will make a Safety Node that should halt the car before it collides with obstacles. To do this, you will make a ROS 2 node that subscribes to the ``LaserScan`` and ``Odometry`` messages. It should analyze the ``LaserScan`` data and, if necessary, publish an ``AckermannDriveStamped`` with the ``speed`` field set to 0.0 m/s to brake.
 
-After you've calculated the array of TTCs, you should decide how to proceed with this information. You'll have to decide how to threshold, and how to best remove false positives (braking when collision isn't imminent). Don't forget to deal with ``inf``s or ``nan``s in your arrays.
+After you've calculated the array of TTCs, you should decide how to proceed with this information. You'll have to decide how to threshold, and how to best remove false positives (braking when collision isn't imminent). Don't forget to deal with ``inf`` and ``nan`` values in your arrays.
 
 **Topic Names**:
 
