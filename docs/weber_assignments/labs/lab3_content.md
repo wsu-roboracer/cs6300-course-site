@@ -1,7 +1,3 @@
----
-orphan: true
----
-
 # Lab 3: Wall Following
 
 ## I. Learning Goals
