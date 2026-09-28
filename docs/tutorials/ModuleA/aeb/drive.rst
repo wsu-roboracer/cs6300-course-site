@@ -1,4 +1,4 @@
-.. _doc_tutorials_aeb_drive:
+﻿.. _doc_tutorials_aeb_drive:
 
 AEB Drive Example
 =================
@@ -55,7 +55,7 @@ This Python script is a **ROS 2 node** that continuously commands a vehicle to d
 - ``10`` is the **queue size**, meaning up to 10 messages will be buffered if the subscriber is slow
 
 5️⃣ Creating a Timer
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 

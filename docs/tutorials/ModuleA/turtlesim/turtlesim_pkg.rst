@@ -1,4 +1,4 @@
-.. _doc_tutorials_turtlesim_pkg:
+﻿.. _doc_tutorials_turtlesim_pkg:
 
 Create Turtlesim Controller Package
 ====================================
@@ -6,7 +6,7 @@ Create Turtlesim Controller Package
 This guide walks you through creating a custom ROS 2 package containing a controller node for the turtlesim simulator.
 
 1️⃣ Overview
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 In this tutorial, you will create a ROS 2 **package** called ``my_turtlesim_controller`` containing a **node** called ``node_turtle_controller.py`` that publishes velocity commands to control the turtle's movement.
 
@@ -29,7 +29,7 @@ Ensure you are in the workspace where you want to create the package:
    cd ~/turtlesim_ws/src
 
 3️⃣ Create the Package
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 Use the ``ros2 pkg create`` command to create the ``my_turtlesim_controller`` package:
 
@@ -76,7 +76,7 @@ Open up the src in Visual Studio Code to view:
 |
 
 5️⃣ Add Dependencies
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 Edit ``package.xml`` to declare the package dependencies. For controlling turtlesim, include ``rclpy`` and ``turtlesim``:
 
@@ -99,7 +99,7 @@ Add your email to the maintainer email line in ``package.xml``:
 |
 
 6️⃣ Colcon Build
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 Navigate back to the turtlesim_ws directory:
 
@@ -133,7 +133,7 @@ If you get the setup tools error, follow the instructions below:
    pip3 install setuptools==58.2.0
 
 7️⃣ Write the Python Node Code
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create a Python script for the turtle controller node. In the terminal navigate to the package's python directory:
 
@@ -227,7 +227,7 @@ This is an example Python node (save as ``node_turtle_controller.py``):
        main()
 
 8️⃣ Update setup.py
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 Update the ``setup.py`` file to add an entry point so the script is runnable as a console script:
 
@@ -240,7 +240,7 @@ Update the ``setup.py`` file to add an entry point so the script is runnable as 
    },
 
 9️⃣ Build the Package
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 Navigate back to the root of the workspace and build your package:
 

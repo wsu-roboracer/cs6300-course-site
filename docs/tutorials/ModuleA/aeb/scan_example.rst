@@ -1,4 +1,4 @@
-.. _doc_tutorials_aeb_scan_example:
+﻿.. _doc_tutorials_aeb_scan_example:
 
 AEB Scan Example
 ================
@@ -20,7 +20,7 @@ The safety node uses LiDAR data to detect obstacles and stop the car if necessar
 To ensure only front-facing obstacles are considered, we modify the ``scan_callback()`` function.
 
 1️⃣ Understanding LiDAR Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The LiDAR sensor provides:
 
@@ -82,7 +82,7 @@ This generates an array of angles corresponding to each LiDAR distance.
 
 **2️⃣ Select Only the Front Angles (±20°)**
 
-.. code-block:: python
+.. code-block:: text
 
    np.deg2rad(20) → Converts 20 degrees to radians (0.349 rad)
    np.abs(angles) < front_angle_range → Finds all angles between -20° and +20°
@@ -103,7 +103,7 @@ This generates an array of angles corresponding to each LiDAR distance.
 Now we ignore obstacles on the sides! 🎯
 
 3️⃣ Why This Fix Works
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -119,7 +119,7 @@ Now we ignore obstacles on the sides! 🎯
      - Car moves smoothly near side obstacles
 
 4️⃣ Summary
-~~~~~~~~~~
+~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -139,7 +139,7 @@ Now we ignore obstacles on the sides! 🎯
      - The car won't brake for side walls anymore
 
 5️⃣ Full Code Example
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
