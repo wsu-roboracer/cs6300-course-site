@@ -1,7 +1,3 @@
----
-orphan: true
----
-
 # Lab 4: Follow the Gap
 
 ## I. Learning Goals
