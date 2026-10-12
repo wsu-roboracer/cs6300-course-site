@@ -1,4 +1,4 @@
-.. _doc_tutorials_turtlesim_install:
+﻿.. _doc_tutorials_turtlesim_install:
 
 Turtlesim Installation
 ======================
@@ -6,12 +6,12 @@ Turtlesim Installation
 This guide walks you through installing and setting up turtlesim, a lightweight simulator for learning ROS 2 concepts.
 
 1️⃣ Overview
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 Turtlesim is a simple 2D simulator that comes with ROS 2. It provides a visual tool for learning ROS 2 concepts such as nodes, topics, services, and actions. The turtle can be controlled through various ROS 2 commands and is perfect for understanding the basics of robot control.
 
 2️⃣ Installation
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 Install turtlesim using apt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -39,7 +39,7 @@ After installation, verify that turtlesim is available:
 You should see ``turtlesim`` listed in the output.
 
 3️⃣ Use Turtlesim
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 Start turtlesim
 ^^^^^^^^^^^^^^^
@@ -109,7 +109,7 @@ You can see the nodes, and their associated topics, services, and actions, using
 You will learn more about these concepts in the coming tutorials. Since the goal of this tutorial is only to get a general overview of turtlesim, you will use rqt to call some of the turtlesim services and interact with ``turtlesim_node``.
 
 4️⃣ Install rqt
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 Open a new terminal to install ``rqt`` and its plugins:
 
@@ -125,7 +125,7 @@ To run rqt:
    rqt
 
 5️⃣ Use rqt
-~~~~~~~~~~
+~~~~~~~~~~~
 
 When running rqt for the first time, the window will be blank. No worries; just select **Plugins > Services > Service Caller** from the menu bar at the top.
 
@@ -200,7 +200,7 @@ If you return to the terminal where ``turtle_teleop_key`` is running and press t
 You've probably also noticed that there's no way to move ``turtle2``. That's because there is no teleop node for ``turtle2``.
 
 6️⃣ Remapping
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 You need a second teleop node in order to control ``turtle2``. However, if you try to run the same command as before, you will notice that this one also controls ``turtle1``. The way to change this behavior is by remapping the ``cmd_vel`` topic.
 
@@ -220,11 +220,11 @@ Now, you can move ``turtle2`` when this terminal is active, and ``turtle1`` when
 |
 
 7️⃣ Close turtlesim
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 To stop the simulation, you can enter ``Ctrl + C`` in the ``turtlesim_node`` terminal, and ``q`` in the ``turtle_teleop_key`` terminals.
 
 Summary
--------
+~~~~~~~
 
 Using turtlesim and rqt is a great way to learn the core concepts of ROS 2.

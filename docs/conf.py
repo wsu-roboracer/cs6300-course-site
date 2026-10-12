@@ -85,7 +85,7 @@ html_theme_options = {
     'includehidden': True,  # Include nested module toctrees so they can be expanded from any page.
     'prev_next_buttons_location': 'bottom',
     # 'display_version': True,  # Display the docs version
-    'navigation_depth.\.venv\Scripts\sphinx-build.exe -M html .\docs .\_build -j auto': 3,  # Depth of the headers shown in the navigation bar
+    'navigation_depth': 3,  # Depth of the headers shown in the navigation bar
     # 'titles_only': True,  # Show only document titles in the sidebar (hide section headings)
 }
 
@@ -115,13 +115,8 @@ html_context = {
     "conf_py_path": "/", # Path in the checkout to the docs root
 }
 
-# html_logo = 'press/img/logo/f1_stickers_02.png'
-html_favicon = 'press/img/logo/f1_stickers_02.png'
-
 # These folders are copied to the documentation's HTML output
 html_static_path = ['_static']
-
-html_extra_path = ['robots.txt']
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)

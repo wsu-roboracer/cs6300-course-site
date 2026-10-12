@@ -78,6 +78,7 @@ You'll create a gap follow node that processes LiDAR data (``/scan``) to find th
 Create a file inside ``gap_follow/gap_follow_node.py``:
 
 .. raw:: html
+
     <iframe frameborder="0" scrolling="no" style="width:100%; height:1569px;" allow="clipboard-write" src="https://emgithub.com/iframe.html?target=https%3A%2F%2Fgithub.com%2FWeber-AGV%2Ff1tenth_lab4_template%2Fblob%2Fmain%2Fgap_follow%2Fscripts%2Freactive_node.py&style=default&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></iframe>
 
 6️⃣ Make It Executable

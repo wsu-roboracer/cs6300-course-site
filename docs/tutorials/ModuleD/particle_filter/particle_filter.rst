@@ -1,4 +1,4 @@
-.. _doc_tutorials_particle_filter:
+﻿.. _doc_tutorials_particle_filter:
 
 Particle Filter Localization
 =============================
@@ -187,7 +187,7 @@ Run Steps
 ---------
 
 1️⃣ Point to Your Map
-^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~
 
 The particle filter ships with a default map (``lab_map_clean``) already configured. If this is your map, **no action is needed** — skip to Step 2.
 
@@ -248,7 +248,7 @@ The particle filter ships with a default map (``lab_map_clean``) already configu
          source install/setup.bash
 
 2️⃣ Bringup (Terminal 1)
-^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Start the car stack as usual:
 
@@ -260,7 +260,7 @@ Start the car stack as usual:
    bringup
 
 3️⃣ Launch the Particle Filter (Terminal 2)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -274,7 +274,7 @@ Start the car stack as usual:
    ``localize_launch.py`` handles the map server and lifecycle transitions internally — you do not need to run ``nav2_map_server`` separately.
 
 4️⃣ Open RViz2 (Terminal 3)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -286,7 +286,7 @@ Start the car stack as usual:
 This loads a pre-configured RViz2 layout with the map, particle cloud, and inferred pose displays already set up. No manual configuration needed.
 
 5️⃣ Set the Initial Pose
-^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The particle filter starts with particles spread randomly across the map. You must tell it roughly where the car is to begin localization:
 
@@ -301,7 +301,7 @@ The particles will converge around your selected location.
    The more accurately you set the initial pose, the faster the filter will converge. If the particles do not converge, try setting the pose again from a clearer location on the map.
 
 6️⃣ Drive to Localize
-^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~
 
 Drive the car using the PlayStation controller. As the car moves, the particle cloud will tighten and track the vehicle's position on the map. The best estimated pose is published on ``/pf/pose/odom``.
 

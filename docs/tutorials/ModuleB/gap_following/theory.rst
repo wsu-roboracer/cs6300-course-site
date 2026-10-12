@@ -1,4 +1,4 @@
-.. _doc_tutorials_gap_following_theory:
+﻿.. _doc_tutorials_gap_following_theory:
 
 Follow the Gap Method
 =====================
@@ -38,14 +38,14 @@ Step-by-Step Process
 ---------------------
 
 1️⃣ Data Acquisition
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 - Receive a **full 360° LiDAR scan** (``LaserScan`` message).
 - For the Hokuyo LiDAR, **flip the scan** if necessary to match intuitive left-to-right ordering.
 - (Optional) Focus on a **front window** (e.g., ±90°), but default is to use the **full scan**.
 
 2️⃣ Preprocessing
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 - **Clean the raw LiDAR ranges**:
   - Replace **NaN** values with maximum range.
@@ -62,7 +62,7 @@ Step-by-Step Process
   - This eliminates unsafe directions close to collisions.
 
 4️⃣ Gap Detection
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 - Treat **non-zero regions** in the processed ranges as **free space**.
 - **Find the longest continuous sequence** of non-zero points:
@@ -80,7 +80,7 @@ Step-by-Step Process
 - Both methods output a **best point index** to steer toward.
 
 6️⃣ Navigation Command
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 - Calculate the **steering angle**:
   - Based on the angular difference between the car's center and the best point.

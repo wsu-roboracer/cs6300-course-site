@@ -1,4 +1,4 @@
-.. _doc_tutorials_wall_follow_package:
+﻿.. _doc_tutorials_wall_follow_package:
 
 Create Wall Following Package
 ==============================
@@ -91,7 +91,7 @@ Modify ``setup.py`` inside ``wall_follow_package``:
    },
 
 7️⃣ C++ Alternative (Optional)
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Run the following:
 
