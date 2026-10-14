@@ -1,0 +1,54 @@
+# Course-level Canvas settings for CS 6300.
+# Everything under canvas/ describes what lives in Canvas; the lab and tutorial
+# content itself stays in docs/ and is published to the course site.
+
+term: Spring 2027
+time_zone: America/Denver     # due dates in canvas/assignments/ are in this zone
+
+canvas:
+  # .env overrides base_url and course_id (CANVAS_API_URL, CANVAS_COURSE_ID),
+  # so these are only the defaults.
+  base_url: http://192.168.4.100:3000
+  course_id: null
+  # false: new items are created unpublished and nothing is published for you.
+  # true: every pushed page, assignment, and module is published.
+  publish: false
+  # Canvas group set that team labs are assigned to. Created empty if missing.
+  team_group_set: Lab Teams
+
+site:
+  base_url: https://wsu-roboracer.github.io/cs6300-course-site
+  docs_dir: docs
+  # Every site page matching these globs (relative to docs_dir) must have a
+  # Canvas assignment in canvas/assignments/. check_sync.py fails otherwise.
+  assignment_pages:
+    - weber_assignments/labs/lab*.rst
+  # Every tutorial area must have a Canvas page in canvas/pages/.
+  area_pages:
+    - tutorials/Module*/*/index.rst
+  ignore_pages:
+    - weber_assignments/labs/index.rst
+
+# The GitHub repo creator students use to get their own copy of a lab repo.
+# The course key and each assignment's repo_task must be registered in the
+# faculty course-data repo before the links work.
+repo_creator:
+  base_url: https://hadzikcs.netlify.app/gh
+  course: sh/CS6300
+
+# Where the student-facing lab repos live. Each lab folder in this repo
+# (an assignment's repo_folder) is pushed to <org>/<repo_task> by
+# sync_lab_repo.py. That repo is the template the repo creator copies.
+lab_repos:
+  org: Weber-AGV
+  # Solutions are kept outside this repo because this repo is public.
+  # <solutions_dir>/<repo_task>/ holds the solved copy of each file that differs
+  # from the starter; sync_lab_repo.py --solutions lays it over main to build
+  # the lab repo's solutions branch. The path is relative to the repo root.
+  solutions_dir: ../../solutions
+
+# Canvas assignment groups. Weights are placeholders until the Spring 2027
+# grade breakdown is set; they must total 100.
+assignment_groups:
+  - name: Labs
+    weight: 100

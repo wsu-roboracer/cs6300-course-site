@@ -1,0 +1,53 @@
+# Canvas modules, in the order students see them.
+# One module per area covered on the course site: the area's page first, then its lab.
+#
+# "id" is how the push script recognises a module, so the name can change freely.
+#
+# Each item is one of:
+#   page: <id>            a file in canvas/pages/
+#   assignment: <id>      a file in canvas/assignments/
+#   site: <page>          a plain link to a course site page (path under docs/, no extension)
+
+modules:
+  - id: start-here
+    name: Start Here
+    items:
+      - page: home
+
+  - id: ros2-turtlesim
+    name: ROS 2 and Turtlesim
+    items:
+      - page: ros2-turtlesim
+      - assignment: lab1
+
+  - id: aeb
+    name: Automatic Emergency Braking
+    items:
+      - page: aeb
+      - assignment: lab2
+
+  - id: wall-following
+    name: Wall Following
+    items:
+      - page: wall-following
+      - assignment: lab3
+
+  - id: follow-the-gap
+    name: Follow the Gap
+    items:
+      - page: follow-the-gap
+      - assignment: lab4
+
+  - id: slam
+    name: SLAM
+    items:
+      - page: slam
+      - assignment: lab5
+
+  - id: localization-pure-pursuit
+    name: Particle Filter Localization and Pure Pursuit
+    items:
+      - page: particle-filter
+      - page: pure-pursuit
+      - assignment: lab6a
+      - assignment: lab6b
