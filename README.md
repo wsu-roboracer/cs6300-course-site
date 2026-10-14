@@ -23,18 +23,10 @@ On Windows, select **Add Python to PATH** during Python installation.
 
 You may clone this repository using your IDE's **Clone Repository** feature or with Git in a terminal.
 
-This project uses a Git submodule. When using an IDE, enable an option such as **Clone submodules**, **Initialize submodules**, or **Recurse submodules** if it is available.
-
-If you clone with an IDE and it does not initialize submodules, open a terminal in the cloned project folder and run:
-
-```sh
-git submodule update --init --recursive
-```
-
 To clone from a terminal instead, run:
 
 ```sh
-git clone --recurse-submodules https://github.com/wsu-roboracer/cs6300-course-site.git
+git clone https://github.com/wsu-roboracer/cs6300-course-site.git
 cd cs6300-course-site
 ```
 
