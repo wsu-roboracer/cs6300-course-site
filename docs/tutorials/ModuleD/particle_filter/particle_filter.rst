@@ -18,31 +18,9 @@ The left side (**Localization**) is what this tutorial covers — taking LiDAR a
 Why a Standalone Particle Filter?
 -----------------------------------
 
-In the Nav2 tutorials you used **AMCL** — Nav2's built-in particle filter — for localization. AMCL is tightly integrated with Nav2's planner, controller, and behavior tree, making it ideal for point-and-click navigation.
+This tutorial introduces the **f1tenth/particle_filter**, a standalone localization package. It answers one question — *"where am I on this map?"* — using Monte Carlo Localization. It does not plan a path or drive the car.
 
-This tutorial introduces the **f1tenth/particle_filter**, a standalone localization package. Both AMCL and this particle filter solve the same problem — *"where am I on this map?"* — using the same core algorithm (Monte Carlo Localization). The difference is how they're used:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 20 40 40
-
-   * -
-     - Nav2 AMCL
-     - f1tenth/particle_filter
-   * - **Integration**
-     - Part of the Nav2 stack (lifecycle managed)
-     - Standalone node (runs independently)
-   * - **TF published**
-     - ``map`` → ``odom``
-     - ``map`` → ``base_link``
-   * - **Use case**
-     - Nav2 navigation (planner + controller)
-     - Custom controllers (pure pursuit, follow the gap, etc.)
-   * - **Ray casting**
-     - Standard CPU
-     - RangeLibc with GPU acceleration (CUDA on Jetson)
-
-**Why learn both?** Nav2 handles the full navigation pipeline for you — but in robotics and racing, you often need direct control over the car's behavior. A standalone particle filter gives you localized pose data that you can feed into your own algorithms (pure pursuit, MPC, custom raceline followers) without the overhead of Nav2's planner and controller. This is how competitive F1TENTH teams operate: lightweight localization + custom control for maximum speed.
+That is what you want for racing. A standalone particle filter gives you localized pose data that you can feed into your own algorithms (pure pursuit, MPC, custom raceline followers). This is how competitive F1TENTH teams operate: lightweight localization + custom control for maximum speed.
 
 Once you have a saved map, you can use a **particle filter** (Monte Carlo Localization) to localize the vehicle within that map in real time. This tutorial uses the `f1tenth/particle_filter <https://github.com/f1tenth/particle_filter>`_ package with **RangeLibc** for fast ray casting.
 

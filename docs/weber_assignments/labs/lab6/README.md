@@ -23,7 +23,7 @@ The particle filter publishes the car's estimated position on the map at ~30-40 
 
 ## III. Prerequisites
 
-- Completed **Lab 5** (SLAM and Nav2 — you have a saved map)
+- Completed **Lab 5** (SLAM — you have a saved map)
 - Particle filter configured and working (see the Particle Filter tutorial)
 - Comfortable creating files and editing Python on the robot
 

@@ -35,13 +35,12 @@ Build/Repair Manual (external link)
 
 1. Tutorial 5: SLAM
    - Link to RoboRacer's Lecture 9: Introduction to Graph-based SLAM
-2. Tutorial 6: Nav2
-3. Lab 5: SLAM and Nav2 Navigation
+2. Lab 5: SLAM Mapping
 
 ### Module D: Planning and Control
 
-1. Tutorial 7: Particle Filter Localization
-2. Tutorial 8: Pure Pursuit
+1. Tutorial 6: Particle Filter Localization
+2. Tutorial 7: Pure Pursuit
    - Link to RoboRacer's Lecture 10: Pure Pursuit
 3. Lab 6a: Waypoint Logger for Pure Pursuit
 4. Lab 6b: Pure Pursuit
@@ -53,8 +52,8 @@ Students follow this course path from their first visit through the final lab:
 ```text
   -> Module A: Tutorial 1 -> Lab 1 -> Tutorial 2 -> Lab 2
   -> Module B: Tutorial 3 -> Lab 3 -> Tutorial 4 -> Lab 4
-  -> Module C: Tutorial 5 -> Tutorial 6 -> Lab 5
-  -> Module D: Tutorial 7 -> Tutorial 8 -> Lab 6a -> Lab 6b
+  -> Module C: Tutorial 5 -> Lab 5
+  -> Module D: Tutorial 6 -> Tutorial 7 -> Lab 6a -> Lab 6b
 ```
 
 Each tutorial is placed immediately before the lab that uses it. Any relevant RoboRacer's

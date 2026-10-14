@@ -36,19 +36,13 @@
 | **Bad Example: Robot with poor gap selection navigating the hall with difficulty** | **Implementation** | **Prepared robot, obstacle course, incomplete/poor Follow the Gap settings** |
 | **Good Example: Robot choosing good gaps and navigating the hall safely through at least 3 corners, bonus if 4 corners + continues**<br>**\*there are 2 maps, do we need videos of both?** | **Implementation** | **Same robot and course; completed Follow the Gap node** |
 
-## Lab 5: SLAM and Nav2 Navigation
+## Lab 5: SLAM Mapping
 
 | **Required Visual** | **Place Near** | **Hardware and Lab Access Needed** |
 | --- | --- | --- |
 | **RViz short video/GIF showing the map growing while the robot moves** | **IV. Part 1 - Map the Environment**<br>**After step 3** | **Robot running SLAM; LiDAR; computer with RViz** |
 | **Screenshot comparing an incomplete/poor map with a complete usable map** | **IV. Part 1 - Map the Environment**<br>**After the map review or map-saving step** | **Existing map data or recorded mapping sessions** |
-| **Screenshot of the saved map files and RViz displaying the loaded map** | **IV. Part 1 - Map the Environment**<br>**After the map loading step** | **Computer with saved map files; Nav2 configured** |
-| **\*? Screenshot of workflow for adding the displays** | **V. Part 2 - 2D Goal Pose Navigation**<br>**All of step 4** | **Close any running SLAM, map server, or RViz2 processes from Part 1. Start fresh** |
-| **RViz screenshot showing the 2D Pose Estimate tool and particle cloud** | **V. Part 2 - 2D Goal Pose Navigation**<br>**After step 5** | **Robot running localization; saved map; RViz** |
-| **Short video/GIF showing a goal selected in RViz and the robot reaching it** | **V. Part 2 - 2D Goal Pose Navigation**<br>**After step 7** | **Robot running Nav2; mapped test area; RViz** |
-| **\*? Screenshot of workflow for adding the panel** | **VI. Part 3 - Waypoint Navigation**<br>**All steps** | **Computer with ROS 2, RViz2, Nav2, and the nav2_rviz_plugins package running.** |
-| **Show what getting the waypoint coordinates for your map looks like** | **VII. Part 4 - Programmatic Waypoint Navigation**<br>**After step 5** | **Computer with ROS 2, RViz2, and Nav2 running.** |
-| **Short video/GIF of robot navigating through the set waypoints**<br>**\*? Could include bad example as well as needed** | **VII. Part 4 - Programmatic Waypoint Navigation**<br>**After step 7** | **Prepared robot, saved map, LiDAR, controller, computer with ROS 2/RViz2/Nav2, and the completed waypoint_nav node.** |
+| **Screenshot of the saved map files and RViz displaying the loaded map** | **IV. Part 1 - Map the Environment**<br>**After the map loading step** | **Computer with saved map files** |
 
 ## Lab 6a: Waypoint Logger for Pure Pursuit
 

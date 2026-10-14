@@ -117,29 +117,6 @@ You should see a line like:
    image: lab_map.pgm
 
 
-5️⃣ Rebuild the Workspace
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The Nav2 launch file reads map files from the **install** directory, not the source directory. Run ``colcon build`` so the newly saved map files get copied there:
-
-.. code-block:: bash
-
-   cd ~/f1tenth_ws
-   colcon build --packages-select f1tenth_stack
-   source install/setup.bash
-
-.. note::
-
-   **Why rebuild?** The ROS 2 workspace has two copies of your files:
-
-   - ``src/`` — your source files (where ``map_saver_cli`` saves the map)
-   - ``install/.../share/`` — the installed copy (where ``nav2_launch.py`` reads from via ``get_package_share_directory()``)
-
-   The verification step below (step 7) reads directly from ``src/``, so it works without rebuilding. But Nav2 reads from the ``install/`` directory, so ``colcon build`` is required to copy the map files there.
-
-   If you re-save the map later (new environment, better scan), you must rebuild again for Nav2 to pick up the updated files.
-
-
 Understanding the YAML Thresholds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -187,7 +164,7 @@ Once installed, open your ``lab_map.pgm`` file in VS Code — it will render the
 |
 
 
-6️⃣ Stop SLAM and Bringup
+5️⃣ Stop SLAM and Bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before loading the saved map, stop the running SLAM and bringup processes to avoid conflicts (both SLAM Toolbox and the map server publish on ``/map``).
@@ -196,14 +173,14 @@ Before loading the saved map, stop the running SLAM and bringup processes to avo
 - Press ``Ctrl+C`` in the **bringup terminal** to stop the car's drivers (sensors are no longer needed for this step)
 - RViz2 can stay open
 
-7️⃣ Load the Map
+6️⃣ Load the Map
 ^^^^^^^^^^^^^^^^^
 
 .. important::
 
-   This step is **verification only** — we are confirming that the saved map files load correctly. You will **not** be able to drive the robot, set a 2D Goal Pose, or use navigation here. Autonomous navigation requires the full Nav2 stack (AMCL for localization, planner, controller) which is covered in the :ref:`Nav2 tutorials <doc_tutorials_nav2_setup>`.
+   This step is **verification only** — we are confirming that the saved map files load correctly. You will **not** be able to drive the robot or localize it on the map here. Localizing the car on a saved map is covered in the :ref:`Particle Filter tutorial <doc_tutorials_particle_filter_index>`.
 
-The map server reads the ``.yaml`` and ``.pgm`` files and publishes the occupancy grid on the ``/map`` topic so other nodes (like Nav2 or RViz2) can use it.
+The map server reads the ``.yaml`` and ``.pgm`` files and publishes the occupancy grid on the ``/map`` topic so other nodes (like RViz2) can use it.
 
 In ROS 2 Humble, the map server is a **lifecycle node**. Unlike a regular node that starts working immediately, a lifecycle node starts in an *unconfigured* state and must be explicitly transitioned through its states before it does anything:
 
@@ -246,7 +223,7 @@ The map is now being published on the ``/map`` topic.
    If ``configure`` fails (e.g. due to a bad ``image:`` path in the yaml), the node enters an error state and ``activate`` will not be available. Fix the yaml and restart Terminal 1 before trying again.
 
 
-8️⃣ Verify the Map in RViz2
+7️⃣ Verify the Map in RViz2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Open a new terminal and launch RViz2:
@@ -277,14 +254,14 @@ You should see your saved map appear. This confirms the map server is running an
 
 .. note::
 
-   RViz2 will show **Global Status: Error — Frame [map] does not exist**. This is expected. The standalone map server does not publish TF frames — the ``map`` frame only appears when AMCL is running (during Nav2 navigation). As long as the Map display shows **Status: Ok** and you can see your map, the verification passed.
+   RViz2 will show **Global Status: Error — Frame [map] does not exist**. This is expected. The standalone map server does not publish TF frames — the ``map`` frame only appears when a localization node is running. As long as the Map display shows **Status: Ok** and you can see your map, the verification passed.
 
    .. image:: img/map_frame_error.png
       :alt: Expected Frame [map] does not exist error in RViz2 during map verification
       :width: 80%
       :align: center
 
-9️⃣ Close Everything
+8️⃣ Close Everything
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Once you've confirmed the map looks correct, close all running processes:
@@ -292,7 +269,7 @@ Once you've confirmed the map looks correct, close all running processes:
 - Press ``Ctrl+C`` in the **map server terminal** (Terminal 1) to stop the map server
 - Close **RViz2**
 
-The map files (``lab_map.pgm`` and ``lab_map.yaml``) are saved to disk. When you get to the Nav2 navigation tutorials, Nav2 will launch its own map server automatically — starting fresh avoids stale RViz2 state or conflicting nodes.
+The map files (``lab_map.pgm`` and ``lab_map.yaml``) are saved to disk. When you get to the Particle Filter tutorial, its launch file starts its own map server automatically — starting fresh avoids stale RViz2 state or conflicting nodes.
 
 
 Common Mistakes

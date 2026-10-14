@@ -1,6 +1,6 @@
 .. _doc_tutorials_particle_filter_index:
 
-Tutorial 7 - Particle Filter Localization
+Tutorial 6 - Particle Filter Localization
 ==========================================
 
 .. toctree::

@@ -248,10 +248,6 @@ TF and Odometry Output
 
 The particle filter publishes a TF transform directly from ``map`` to ``laser``, skipping the usual ``map`` → ``odom`` → ``base_link`` → ``laser`` chain. This works because the particle filter computes the car's full pose on the map — there is no need for the intermediate frames. It also publishes the pose as an ``Odometry`` message on ``/pf/pose/odom`` — this is what your pure pursuit node subscribes to.
 
-.. note::
-
-   Nav2's AMCL takes the standard approach and publishes ``map`` → ``odom``, relying on the existing ``odom`` → ``base_link`` → ``laser`` chain from the robot's odometry. This is one reason you cannot run both AMCL and the standalone particle filter at the same time — they both try to define the ``map`` frame, causing a TF conflict.
-
 The odometry message includes the **covariance** computed from the particle distribution:
 
 .. code-block:: python

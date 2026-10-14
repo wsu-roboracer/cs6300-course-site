@@ -10,5 +10,4 @@ This module covers mapping and localization techniques for the RoboRacer vehicle
    :name: sec-modulec
 
    slam/index
-   nav2/index
    ../../weber_assignments/labs/lab5

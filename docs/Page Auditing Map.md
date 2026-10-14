@@ -27,7 +27,7 @@
 | CS6300 | ModuleB/WallFollowing | Course site | Compare with Build wall-following documentation |
 | CS6300 | ModuleB/FollowTheGap | Course site | Compare with Build gap-finding documentation |
 | CS6300 | ModuleC/Slam | Course site | Course material |
-| CS6300 | ModuleC/Nav2Navigation | Course site | Course material |
+| CS6300 | ModuleC/Nav2Navigation | Delete | Nav2 dropped from the course |
 | CS6300 | ModuleD/ParticleFilterLocalization | Course site | Course material |
 | CS6300 | ModuleD/PurePursuit | Course site | Course material |
 | CS6300 | WeberAssignments/Labs | Course site | Course labs |
