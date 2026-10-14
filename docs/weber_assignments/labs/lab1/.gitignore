@@ -1,0 +1,8 @@
+# colcon output, if you build inside this folder
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc

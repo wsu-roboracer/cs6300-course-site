@@ -60,40 +60,37 @@ So, in summary, here's what we need to do:
 
 Implement wall following to make the car drive autonomously around the CAE hall course. Follow the left, inner wall of CAE hall while driving counter-clockwise. You can implement this node in either C++ or Python.
 
-Test in the [f1tenth_gym_ros](https://github.com/f1tenth/f1tenth_gym_ros/tree/dev-jazzy) simulator on the CAE hall course map by changing the `map_path` in `sim.yaml` to `'maps/levine_blocked'`. This map is the CAE hall loop with its doorways sealed, so the car cannot wander out. The autograder drives your node around that same map. Halfway down the west hallway a pair of facing door recesses opens up; to two beams a doorway looks like a corner, so a naive follower steers into it. Think about how your node can tell the two apart (a corner has a wall ahead, a doorway does not). The map comes with a centerline, so the simulator counts your laps (`/ego_racecar/lap_count`, and a "completed lap" line in the bridge log).
+Test in the [f1tenth_gym_ros](https://github.com/f1tenth/f1tenth_gym_ros/tree/dev-jazzy) simulator on the CAE hall course map by changing the `map_path` in `sim.yaml` to `'maps/levine_blocked'`. This map is the CAE hall loop with its doorways sealed, so the car cannot wander out. Your lab is graded on that same map. Halfway down the west hallway a pair of facing door recesses opens up; to two beams a doorway looks like a corner, so a naive follower steers into it. Think about how your node can tell the two apart (a corner has a wall ahead, a doorway does not). The map comes with a centerline, so the simulator counts your laps (`/ego_racecar/lap_count`, and a "completed lap" line in the bridge log).
 
-Your node must subscribe to `/scan` and publish `AckermannDriveStamped` on `/drive`, and it must work when started with a plain `ros2 run wall_follow <executable>`: the autograder passes no parameter file, so bake your tuned gains, desired distance and speeds into the node's defaults.
+Your node must subscribe to `/scan` and publish `AckermannDriveStamped` on `/drive`, and it must work when started with a plain `ros2 run wall_follow <executable>`: it is graded with no parameter file, so bake your tuned gains, desired distance and speeds into the node's defaults.
 
-## V. Deliverables and Submission
+## V. Getting Started
 
-**Deliverable 1**: After you're finished, update the entire skeleton package directory with your `wall_follow` package and directly commit and push to the repo Classroom 50 created for you. Your committed code should start and run in simulation smoothly, this includes building as a package with any dependencies included as part of the ``package.xml``.
+This lab is done individually.
+
+1. Create your repository with the **Create my lab repository** button on the Canvas assignment, then accept the invitation GitHub sends you.
+2. Clone it into the `src` folder of your ROS 2 workspace, then build and source the workspace.
+
+## VI. Deliverables and Submission
+
+**Deliverable 1**: Finish the `wall_follow` package in your repository, then commit and push. Your committed code should start and run in simulation smoothly; this includes building as a package with any dependencies declared in `package.xml`.
+
+Use the names this lab gives you: package `wall_follow` with an executable that starts with `ros2 run wall_follow <executable>` (the skeleton's `wall_follow_node`), subscribing to `/scan` and publishing on `/drive`.
 
 **Deliverable 2**: Make a screen cast of running your wall following node in the simulation: at least one full counter-clockwise lap of the CAE hall course, following the left, inner wall. Upload your video to YouTube (unlisted) or Google Drive — for Drive, set sharing to **"Anyone with the link can view"** or we cannot grade it — and include the link in **`SUBMISSION.md`**.
 
 ### Submitting
 
-We'll be using Classroom 50 throughout the semester to manage submissions for lab assignments. You can commit and push your work as often as you need, but a plain push does **not** count as a submission. When you're ready to submit, push a tag named `submission`:
+1. Commit and push your work. Check on github.com that your latest commit is there.
+2. Submit the URL of your repository on the Canvas assignment.
 
-```bash
-git push                            # your commits
-git tag submission
-git push origin submission          # this triggers the autograder
-```
+## VII. Grading Rubric
 
-The autograder builds your package, probes your controller, and drives it around the CAE hall course in the simulator, then posts your score as a **Release** on your repo (check the Releases page or the commit's status check a few minutes after you tag). To resubmit, move the tag to a new commit:
+| Item | What is graded | Points |
+|------|----------------|--------|
+| Compilation | The package builds | 10 |
+| Implemented PID | In a straight corridor, your node steers the right way when the car is too close to one wall, too close to the other, or turned toward either wall, whichever wall you follow | 40 |
+| Tuned PID | One counter-clockwise lap of the CAE hall course, starting on the south hallway heading east, without touching a wall. A run that ends early earns partial credit for the fraction of the loop covered | 40 |
+| Video | The link in `SUBMISSION.md`: YouTube unlisted, or Google Drive shared as "Anyone with the link can view" | 10 |
 
-```bash
-git tag -f submission
-git push --force origin submission
-```
-
-The best scored ``submission`` push is counted as your final submission and its grade will be your lab's grade.
-
-**The autograder finds your work by name.** Use the names the deliverables specify: package `wall_follow` with an executable it can start with `ros2 run wall_follow <executable>` (the skeleton's `wall_follow_node`), subscribing `/scan` and publishing `/drive`. Otherwise, the autograder will not be able to grade your work and your submission may get the wrong grade.
-
-## VI: Grading Rubric
-
-- Compilation: **10** Points (autograded)
-- Implemented PID: **40** Points (autograded without the simulator: your node is fed scans of a straight corridor with the car too close to one wall, too close to the other, and turned toward each wall, and must steer the right way in each case — whichever wall you follow)
-- Tuned PID: **40** Points (autograded in simulation: one counter-clockwise lap of the grading map, starting on the south hallway heading east, without touching a wall; a run that ends early earns partial credit for the fraction of the loop covered)
-- Video: **10** Points (TA-graded from the link in `SUBMISSION.md`: YouTube unlisted, or Google Drive shared as "Anyone with the link can view")
+**Total: 100 Points**
