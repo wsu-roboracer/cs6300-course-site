@@ -1,0 +1,6 @@
+# Keep Unix line endings on every platform. A Python node checked out with
+# Windows line endings will not start under ROS.
+* text=auto eol=lf
+
+# Images are binary; never convert them.
+*.png binary

@@ -2,7 +2,7 @@
 
 ## I. Learning Goals
 
-- Create a ROS 2 Python package from scratch
+- Work with a ROS 2 Python package: its folders, dependencies, and entry points
 - Subscribe to a localization topic and extract pose data
 - Write pose data to a CSV file in real time
 - Understand how the particle filter provides map-relative position
@@ -16,10 +16,26 @@ The particle filter publishes the car's estimated position on the map at ~30-40 
 
 | Part | Task | What You Learn |
 |------|------|----------------|
-| 1 | Create the `pure_pursuit` package | ROS 2 package structure, `ament_python`, dependencies |
+| 1 | Get the repository and build the `pure_pursuit` package | ROS 2 package structure, `ament_python`, dependencies |
 | 2 | Write the waypoint logger node | Subscriptions, Odometry messages, CSV file I/O |
 | 3 | Record a lap of waypoints | Running nodes, particle filter localization, data collection |
 | 4 | Verify and visualize the waypoints | Data validation, CSV inspection |
+
+**One repository for Lab 6a and Lab 6b.** Your team's repository holds the `pure_pursuit` package for both labs. In this lab you write the waypoint logger; in Lab 6b you add the Pure Pursuit node to the same package, in the same repository. Its instructions are in `LAB6B.md`.
+
+```text
+pure_pursuit/
+├── package.xml                      dependencies are already declared
+├── setup.py                         Lab 6a Part 2, and Lab 6b
+├── maps/waypoints.csv               Lab 6a Part 3 records it here
+└── pure_pursuit/
+    ├── waypoint_logger.py           Lab 6a Part 2
+    └── pure_pursuit_node.py         Lab 6b
+images/                              your screenshot goes here
+SUBMISSION.md                        sections for Lab 6a and Lab 6b
+```
+
+This lab is done in teams. Your team shares one repository.
 
 ## III. Prerequisites
 
@@ -27,27 +43,33 @@ The particle filter publishes the car's estimated position on the map at ~30-40 
 - Particle filter configured and working (see the Particle Filter tutorial)
 - Comfortable creating files and editing Python on the robot
 
-## IV. Part 1 — Create the Package
+## IV. Part 1 — Get the Repository and Build the Package
 
-Create a new ROS 2 Python package on the robot:
+1. Every member opens the **Create my lab repository** button on the Canvas assignment and chooses your team. The first member creates the team repository and the rest are added to it. Accept the invitation GitHub sends you. Lab 6b uses this same repository.
+2. On the car, clone it into your workspace's `src` folder as `lab6`:
 
-```bash
-cd ~/f1tenth_ws/src
-ros2 pkg create pure_pursuit --build-type ament_python --dependencies rclpy nav_msgs geometry_msgs visualization_msgs std_msgs
-```
+   ```bash
+   cd ~/f1tenth_ws/src
+   git clone <your repository URL> lab6
+   ```
 
-Create a directory for your waypoint CSV files:
+3. Build the package:
 
-```bash
-mkdir -p ~/f1tenth_ws/src/pure_pursuit/maps
-```
+   ```bash
+   cd ~/f1tenth_ws
+   source /opt/ros/humble/setup.bash
+   colcon build --packages-select pure_pursuit
+   source install/setup.bash
+   ```
+
+Look through `pure_pursuit/package.xml` and `pure_pursuit/setup.py` before you start: they are the same kind of package you built in Lab 1, with its dependencies already declared. All of you push to the one repository, so **pull before you push**.
 
 ## V. Part 2 — Write the Waypoint Logger Node
 
-Create the file `pure_pursuit/pure_pursuit/waypoint_logger.py`. Your node must:
+Finish `pure_pursuit/pure_pursuit/waypoint_logger.py`. Your node must:
 
 1. **Subscribe** to `/pf/pose/odom` (message type: `nav_msgs/msg/Odometry`)
-2. **Open a CSV file** for writing when the node starts (save to `~/f1tenth_ws/src/pure_pursuit/maps/waypoints.csv`)
+2. **Open a CSV file** for writing when the node starts (save to `~/f1tenth_ws/src/lab6/pure_pursuit/maps/waypoints.csv`, which is `CSV_PATH` in the skeleton)
 3. **In the callback**, extract the pose from each Odometry message and write a row to the CSV:
    - `x` — `msg.pose.pose.position.x`
    - `y` — `msg.pose.pose.position.y`
@@ -143,7 +165,7 @@ You should see yellow dots and an orange path line building in RViz2 as you driv
 
 ### Register the Entry Point
 
-Edit `setup.py` in the `pure_pursuit` package. Add your node to the `console_scripts` list:
+Finish the Lab 6a `TODO` in `pure_pursuit/setup.py` by adding your node to the `console_scripts` list. Leave the Lab 6b `TODO`s for Lab 6b.
 
 ```python
 entry_points={
@@ -209,7 +231,7 @@ source install/setup.bash
 Check that your CSV was created and contains data:
 
 ```bash
-wc -l ~/f1tenth_ws/src/pure_pursuit/maps/waypoints.csv
+wc -l ~/f1tenth_ws/src/lab6/pure_pursuit/maps/waypoints.csv
 ```
 
 With the minimum distance filter implemented, a full lap at moderate speed should produce **several hundred waypoints**. If the count is very low, the particle filter may not have been localized — re-run with the initial pose set.
@@ -225,18 +247,37 @@ This keeps every 5th row — a quick way to reduce density without re-recording.
 Inspect the first few lines:
 
 ```bash
-head -5 ~/f1tenth_ws/src/pure_pursuit/maps/waypoints.csv
+head -5 ~/f1tenth_ws/src/lab6/pure_pursuit/maps/waypoints.csv
 ```
 
 You should see four comma-separated numbers per line (x, y, orientation_z, orientation_w).
 
-## VIII. Deliverables
+## VIII. Submitting
+
+1. Save a screenshot of the terminal with the logger recording as `images/logger_running.png`.
+2. Commit and push your code, the CSV, and the screenshot:
+
+   ```bash
+   cd ~/f1tenth_ws/src/lab6
+   git add pure_pursuit images
+   git commit -m "Lab 6a: waypoint logger and recorded lap"
+   git push
+   ```
+
+3. Open `SUBMISSION.md` on github.com and check that the screenshot shows.
+4. Submit the URL of your team's repository on the Lab 6a Canvas assignment. One submission covers the whole team.
+
+Keep the repository: Lab 6b continues in it, and reads the waypoints you recorded here.
+
+## IX. Deliverables
+
+Everything is graded from your team's repository.
 
 | # | Deliverable | Points |
 |---|-------------|--------|
-| 1 | Screenshot of your `waypoint_logger.py` source code | 25 |
-| 2 | Screenshot of the terminal showing the logger running and recording poses as you drive | 25 |
-| 3 | The `waypoints.csv` file submitted to Canvas | 25 |
-| 4 | Screenshot of `wc -l` and `head -5` output showing the CSV has several hundred rows of valid data | 25 |
+| 1 | `waypoint_logger.py`, with the entry point registered in `setup.py` | 25 |
+| 2 | `images/logger_running.png`: the terminal showing the logger running and recording poses as you drive | 25 |
+| 3 | `pure_pursuit/maps/waypoints.csv` committed | 25 |
+| 4 | The CSV holds a full lap: several hundred rows of `x, y, z, w`, no header, spaced at least 0.1 m apart | 25 |
 
 **Total: 100 Points**

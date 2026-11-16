@@ -25,67 +25,40 @@ Pure Pursuit is a geometric path tracking algorithm. On each update cycle:
 | 2 | Write the Pure Pursuit node | Path tracking, geometry, AckermannDriveStamped |
 | 3 | Test on the robot | Tuning, localization, autonomous driving |
 
-Your team's repository holds the `pure_pursuit` package, with the parts you must write marked `TODO`:
+You keep working in your team's Lab 6a repository: this lab adds the Pure Pursuit node to the same `pure_pursuit` package. The parts you write are marked `TODO (Lab 6b, ...)`:
 
 ```text
 pure_pursuit/
-├── package.xml                      dependencies are already declared
 ├── setup.py                         Part 1
 ├── config/pure_pursuit.yaml         Part 1 (you create it)
 ├── launch/pure_pursuit_launch.py    Part 1 (you create it)
-├── maps/waypoints.csv               copied from Lab 6a
+├── maps/waypoints.csv               recorded in Lab 6a
 └── pure_pursuit/
-    ├── waypoint_logger.py           copied from Lab 6a
+    ├── waypoint_logger.py           written in Lab 6a
     └── pure_pursuit_node.py         Part 2
-SUBMISSION.md                        video link and write-up
+SUBMISSION.md                        Lab 6b section: video link and write-up
 ```
 
-This lab is done in teams. Your team shares one repository.
+This lab is done in teams, in the same team repository as Lab 6a.
 
 ## III. Prerequisites
 
-- Completed **Lab 6a** (you have `waypoint_logger.py` and a `waypoints.csv` in `~/f1tenth_ws/src/pure_pursuit/`)
+- Completed **Lab 6a**: your repository has a working `waypoint_logger.py` and a recorded `pure_pursuit/maps/waypoints.csv`
 - Particle filter configured and working
 
 ## IV. Getting Started
 
-1. Every member opens the **Create my lab repository** button on the Canvas assignment and chooses your team. The first member creates the team repository and the rest are added to it. Accept the invitation GitHub sends you.
-2. On the car, clone it into your workspace's `src` folder:
+There is no new repository for this lab. On the car, pull your team's latest work and rebuild:
 
-   ```bash
-   cd ~/f1tenth_ws/src
-   git clone <your repository URL> lab6b
-   ```
-
-3. Copy your Lab 6a logger and waypoints into it:
-
-   ```bash
-   cp ~/f1tenth_ws/src/pure_pursuit/pure_pursuit/waypoint_logger.py ~/f1tenth_ws/src/lab6b/pure_pursuit/pure_pursuit/
-   cp ~/f1tenth_ws/src/pure_pursuit/maps/waypoints.csv ~/f1tenth_ws/src/lab6b/pure_pursuit/maps/
-   ```
-
-4. Move the Lab 6a package out of the workspace. Both folders hold a package named `pure_pursuit`, and `colcon build` refuses to build two packages with the same name.
-
-   ```bash
-   mv ~/f1tenth_ws/src/pure_pursuit ~/lab6a_pure_pursuit
-   ```
-
-5. Build, and commit what you copied:
-
-   ```bash
-   cd ~/f1tenth_ws
-   colcon build --packages-select pure_pursuit
-   source install/setup.bash
-
-   cd ~/f1tenth_ws/src/lab6b
-   git add pure_pursuit
-   git commit -m "Add our Lab 6a logger and waypoints"
-   git push
-   ```
+```bash
+cd ~/f1tenth_ws/src/lab6
+git pull
+cd ~/f1tenth_ws
+colcon build --packages-select pure_pursuit
+source install/setup.bash
+```
 
 All of you push to the one repository, so **pull before you push**.
-
-> **Recording new waypoints:** your Lab 6a logger saves to `~/f1tenth_ws/src/pure_pursuit/maps/waypoints.csv`, which no longer exists. If you record again, change that path in `waypoint_logger.py` to `~/f1tenth_ws/src/lab6b/pure_pursuit/maps/waypoints.csv`.
 
 ## V. Part 1 — Config File and Launch File
 
@@ -140,7 +113,7 @@ def generate_launch_description():
 
 ### Update setup.py
 
-Finish the two `TODO`s in `pure_pursuit/setup.py`.
+Finish the two Lab 6b `TODO`s in `pure_pursuit/setup.py`.
 
 Install the config, launch, and map files by adding these lines to the `data_files` list:
 
@@ -150,7 +123,7 @@ Install the config, launch, and map files by adding these lines to the `data_fil
 (os.path.join('share', package_name, 'maps'), glob('maps/*.csv')),
 ```
 
-Register the pure pursuit node in `console_scripts`, alongside the existing `waypoint_logger`:
+Register the pure pursuit node in `console_scripts`, alongside the `waypoint_logger` you registered in Lab 6a:
 
 ```python
 entry_points={
@@ -239,7 +212,7 @@ source install/setup.bash
    source /opt/ros/humble/setup.bash
    source install/setup.bash
    ros2 run waypoint_viz waypoint_viz_node --ros-args \
-     -p waypoint_file:=~/f1tenth_ws/src/lab6b/pure_pursuit/maps/waypoints.csv
+     -p waypoint_file:=~/f1tenth_ws/src/lab6/pure_pursuit/maps/waypoints.csv
    ```
 
 4. Open **RViz2** with the pre-configured particle filter layout (Terminal 4):
@@ -279,9 +252,9 @@ If the car doesn't track well, adjust parameters in `pure_pursuit.yaml` and rebu
 
 ## VIII. Submitting
 
-1. Record the video and write the write-up in `SUBMISSION.md`.
+1. Record the video, and fill in the Lab 6b section of `SUBMISSION.md`.
 2. Commit and push your work, including the parameters you settled on in `pure_pursuit.yaml`. Check on github.com that your latest commit is there.
-3. Submit the URL of your team's repository on the Canvas assignment. One submission covers the whole team.
+3. Submit the URL of your team's repository on the Lab 6b Canvas assignment: the same URL you submitted for Lab 6a. One submission covers the whole team.
 
 ## IX. Deliverables
 

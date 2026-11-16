@@ -1,0 +1,15 @@
+# Model files are large and rebuilt on the car; do not commit them.
+*.onnx
+*.engine
+*.trt
+*.pth
+*.pt
+
+# The training dataset stays in Google Drive.
+dataset/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.vscode/
