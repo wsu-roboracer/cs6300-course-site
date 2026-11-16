@@ -1,0 +1,8 @@
+# Keep Unix line endings on every platform. A Python node checked out with
+# Windows line endings will not start under ROS.
+* text=auto eol=lf
+
+# Map images and screenshots are binary; never convert them.
+*.pgm binary
+*.png binary
+*.jpg binary

@@ -10,7 +10,7 @@
 
 ## II. Overview
 
-In Lab 6 you built a waypoint logger that records the car's path to a CSV file. In this lab you will build the **Pure Pursuit node** that reads those waypoints and drives the car autonomously along the recorded path.
+In Lab 6a you built a waypoint logger that records the car's path to a CSV file. In this lab you will build the **Pure Pursuit node** that reads those waypoints and drives the car autonomously along the recorded path.
 
 Pure Pursuit is a geometric path tracking algorithm. On each update cycle:
 
@@ -25,17 +25,73 @@ Pure Pursuit is a geometric path tracking algorithm. On each update cycle:
 | 2 | Write the Pure Pursuit node | Path tracking, geometry, AckermannDriveStamped |
 | 3 | Test on the robot | Tuning, localization, autonomous driving |
 
+Your team's repository holds the `pure_pursuit` package, with the parts you must write marked `TODO`:
+
+```text
+pure_pursuit/
+├── package.xml                      dependencies are already declared
+├── setup.py                         Part 1
+├── config/pure_pursuit.yaml         Part 1 (you create it)
+├── launch/pure_pursuit_launch.py    Part 1 (you create it)
+├── maps/waypoints.csv               copied from Lab 6a
+└── pure_pursuit/
+    ├── waypoint_logger.py           copied from Lab 6a
+    └── pure_pursuit_node.py         Part 2
+SUBMISSION.md                        video link and write-up
+```
+
+This lab is done in teams. Your team shares one repository.
+
 ## III. Prerequisites
 
-- Completed **Lab 6** (you have a `waypoints.csv` file in `~/f1tenth_ws/src/pure_pursuit/maps/`)
-- The `pure_pursuit` package already exists from Lab 6
+- Completed **Lab 6a** (you have `waypoint_logger.py` and a `waypoints.csv` in `~/f1tenth_ws/src/pure_pursuit/`)
 - Particle filter configured and working
 
-## IV. Part 1 — Config File and Launch File
+## IV. Getting Started
+
+1. Every member opens the **Create my lab repository** button on the Canvas assignment and chooses your team. The first member creates the team repository and the rest are added to it. Accept the invitation GitHub sends you.
+2. On the car, clone it into your workspace's `src` folder:
+
+   ```bash
+   cd ~/f1tenth_ws/src
+   git clone <your repository URL> lab6b
+   ```
+
+3. Copy your Lab 6a logger and waypoints into it:
+
+   ```bash
+   cp ~/f1tenth_ws/src/pure_pursuit/pure_pursuit/waypoint_logger.py ~/f1tenth_ws/src/lab6b/pure_pursuit/pure_pursuit/
+   cp ~/f1tenth_ws/src/pure_pursuit/maps/waypoints.csv ~/f1tenth_ws/src/lab6b/pure_pursuit/maps/
+   ```
+
+4. Move the Lab 6a package out of the workspace. Both folders hold a package named `pure_pursuit`, and `colcon build` refuses to build two packages with the same name.
+
+   ```bash
+   mv ~/f1tenth_ws/src/pure_pursuit ~/lab6a_pure_pursuit
+   ```
+
+5. Build, and commit what you copied:
+
+   ```bash
+   cd ~/f1tenth_ws
+   colcon build --packages-select pure_pursuit
+   source install/setup.bash
+
+   cd ~/f1tenth_ws/src/lab6b
+   git add pure_pursuit
+   git commit -m "Add our Lab 6a logger and waypoints"
+   git push
+   ```
+
+All of you push to the one repository, so **pull before you push**.
+
+> **Recording new waypoints:** your Lab 6a logger saves to `~/f1tenth_ws/src/pure_pursuit/maps/waypoints.csv`, which no longer exists. If you record again, change that path in `waypoint_logger.py` to `~/f1tenth_ws/src/lab6b/pure_pursuit/maps/waypoints.csv`.
+
+## V. Part 1 — Config File and Launch File
 
 ### Create the Config File
 
-Create `~/f1tenth_ws/src/pure_pursuit/config/pure_pursuit.yaml`:
+Create `pure_pursuit/config/pure_pursuit.yaml` in your repository:
 
 ```yaml
 pure_pursuit_node:
@@ -55,7 +111,7 @@ pure_pursuit_node:
 
 ### Create the Launch File
 
-Create `~/f1tenth_ws/src/pure_pursuit/launch/pure_pursuit_launch.py`:
+Create `pure_pursuit/launch/pure_pursuit_launch.py` in your repository:
 
 ```python
 from launch import LaunchDescription
@@ -84,9 +140,9 @@ def generate_launch_description():
 
 ### Update setup.py
 
-You need to tell the build system to install the config and launch files. Edit `setup.py` in the `pure_pursuit` package:
+Finish the two `TODO`s in `pure_pursuit/setup.py`.
 
-Add these lines inside the `data_files` list (before the closing bracket):
+Install the config, launch, and map files by adding these lines to the `data_files` list:
 
 ```python
 (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
@@ -94,20 +150,20 @@ Add these lines inside the `data_files` list (before the closing bracket):
 (os.path.join('share', package_name, 'maps'), glob('maps/*.csv')),
 ```
 
-Add the pure pursuit node to `console_scripts` (alongside the existing waypoint_logger):
+Register the pure pursuit node in `console_scripts`, alongside the existing `waypoint_logger`:
 
-   ```python
-   entry_points={
-       'console_scripts': [
-           'waypoint_logger = pure_pursuit.waypoint_logger:main',
-           'pure_pursuit_node = pure_pursuit.pure_pursuit_node:main',
-       ],
-   },
-   ```
+```python
+entry_points={
+    'console_scripts': [
+        'waypoint_logger = pure_pursuit.waypoint_logger:main',
+        'pure_pursuit_node = pure_pursuit.pure_pursuit_node:main',
+    ],
+},
+```
 
-## V. Part 2 — Write the Pure Pursuit Node
+## VI. Part 2 — Write the Pure Pursuit Node
 
-Create `~/f1tenth_ws/src/pure_pursuit/pure_pursuit/pure_pursuit_node.py`. Your node must:
+Finish `pure_pursuit/pure_pursuit/pure_pursuit_node.py`. Your node must:
 
 1. **Load parameters** — read `lookahead_distance`, `speed`, and `waypoint_file` from the parameter server
 2. **Load waypoints from CSV** — read the waypoint file and store all poses as a list of `(x, y, z, w)` tuples
@@ -164,7 +220,7 @@ colcon build --packages-select pure_pursuit
 source install/setup.bash
 ```
 
-## VI. Part 3 — Test on the Robot
+## VII. Part 3 — Test on the Robot
 
 1. Start **bringup** (Terminal 1)
 2. Launch the **particle filter** (Terminal 2):
@@ -183,7 +239,7 @@ source install/setup.bash
    source /opt/ros/humble/setup.bash
    source install/setup.bash
    ros2 run waypoint_viz waypoint_viz_node --ros-args \
-     -p waypoint_file:=~/f1tenth_ws/src/pure_pursuit/maps/waypoints.csv
+     -p waypoint_file:=~/f1tenth_ws/src/lab6b/pure_pursuit/maps/waypoints.csv
    ```
 
 4. Open **RViz2** with the pre-configured particle filter layout (Terminal 4):
@@ -221,14 +277,22 @@ If the car doesn't track well, adjust parameters in `pure_pursuit.yaml` and rebu
 | Car drifts off path over time | Re-set initial pose in RViz2 (particle filter may have diverged) |
 | Car immediately stops or spins | Initial pose not set — set 2D Pose Estimate and re-launch |
 
-## VII. Deliverables
+## VIII. Submitting
+
+1. Record the video and write the write-up in `SUBMISSION.md`.
+2. Commit and push your work, including the parameters you settled on in `pure_pursuit.yaml`. Check on github.com that your latest commit is there.
+3. Submit the URL of your team's repository on the Canvas assignment. One submission covers the whole team.
+
+## IX. Deliverables
+
+Everything is graded from your team's repository.
 
 | # | Deliverable | Points |
 |---|-------------|--------|
-| 1 | `pure_pursuit_node.py` source code | 20 |
-| 2 | Screenshot of your `pure_pursuit_launch.py` and `pure_pursuit.yaml` | 10 |
-| 3 | Screenshot of your updated `setup.py` showing entry points, data_files | 10 |
-| 4 | Video: Car autonomously following the recorded waypoints for at least one full lap (screen recording of RViz2 + real car) | 40 |
-| 5 | Short write-up (3-5 sentences): What lookahead distance and speed did you settle on? What happened when you changed them? | 20 |
+| 1 | `pure_pursuit_node.py` | 20 |
+| 2 | `pure_pursuit_launch.py` and `pure_pursuit.yaml` | 10 |
+| 3 | `setup.py`, with the entry point and data files | 10 |
+| 4 | Video link in `SUBMISSION.md`: the car autonomously following the recorded waypoints for at least one full lap (screen recording of RViz2 + real car). YouTube unlisted, or Google Drive shared as "Anyone with the link can view" | 40 |
+| 5 | Write-up in `SUBMISSION.md` (3-5 sentences): What lookahead distance and speed did you settle on? What happened when you changed them? | 20 |
 
 **Total: 100 Points**

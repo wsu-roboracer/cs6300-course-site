@@ -7,9 +7,9 @@ assignment_group: Labs
 points: 100
 due: null                 # TBD
 team: true
-submission_types: [online_url, online_upload]
+submission_types: [online_url]
 ---
 
-Complete Lab 5 with your team. The full instructions, deliverables, and rubric are on the course site.
+Map the CAE hallway loop with SLAM Toolbox, save the map, and check that it loads. Your team commits the map files and two screenshots to its repository. The full instructions and rubric are on the course site.
 
 When you are done, submit the link to your repository here.
