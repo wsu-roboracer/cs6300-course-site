@@ -6,6 +6,13 @@ Lab 1 - Introduction to ROS2
 
 .. todo:: Customize this lab for Weber.
 
+.. admonition:: New to ROS 2? Start with the walkthrough
+   :class: tip
+
+   `Lab 1 step by step <https://wsu-roboracer.github.io/cs6300-lab1-walkthrough/>`_ walks
+   through what you are building and why, in six steps: the package, the two nodes, the
+   launch file, the command line, and what the check script scores. About three minutes.
+
 | **Repository:** `Github Repository <https://github.com/f1tenth/f1tenth_lab1_template/tree/24f7320ebf1b9a325a2039d4208204da4454d1ab>`_
 
 
