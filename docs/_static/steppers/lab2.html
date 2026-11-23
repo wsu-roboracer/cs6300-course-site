@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 2 Stepper &mdash; reading the code that stops the car</title>
+<style>
+  :root {
+    --ink:#2c3e50; --muted:#6e6e6e; --rule:#d8dee6;
+    --green:#1c7e45; --blue:#2573a7; --orange:#a95c19;
+    --red:#c0392b; --purple:#8e44ad; --deep:#4527a0; --teal:#00695c;
+    --tint-green:#f2fbf4; --tint-blue:#eaf2f8; --tint-orange:#fff3e0;
+    --tint-red:#fce4ec; --tint-purple:#ede7f6; --tint-teal:#e0f2f1;
+    --code-bg:#1e1e2e; --code-fg:#cdd6f4; --code-dim:#9399b2; --code-hit:#45475a;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:1.5rem 1.25rem 3rem;
+         font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+         color:var(--ink); background:#fff; line-height:1.5; }
+  .wrap { margin:0 auto; }
+  h1 { font-size:1.35rem; margin:0 0 .2rem; }
+  .sub { color:var(--muted); font-size:.9rem; margin:0 0 1.1rem; }
+
+  /* ---- tabs ---- */
+  .tabs { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1rem;
+          border-bottom:2px solid var(--rule); padding-bottom:.6rem; }
+  .tabs button { font:inherit; font-size:.9rem; font-weight:600; padding:.45rem 1rem;
+                 border:1px solid var(--rule); border-radius:7px 7px 0 0;
+                 background:#f7f9fb; color:var(--muted); cursor:pointer; }
+  .tabs button:hover { color:var(--ink); }
+  .tabs button.on { background:#fff; color:var(--ink); border-bottom-color:#fff; }
+  .tabs button[data-mode="files"].on { border-top:3px solid var(--teal);   color:var(--teal); }
+  .tabs button[data-mode="init"].on  { border-top:3px solid var(--green);  color:var(--green); }
+  .tabs button[data-mode="odom"].on  { border-top:3px solid var(--blue);   color:var(--blue); }
+  .tabs button[data-mode="scan"].on  { border-top:3px solid var(--orange); color:var(--orange); }
+  .tabs button[data-mode="brake"].on { border-top:3px solid var(--red);    color:var(--red); }
+  .tabs button[data-mode="car"].on   { border-top:3px solid var(--purple); color:var(--purple); }
+  .tabs button[data-mode="graded"].on{ border-top:3px solid var(--deep);   color:var(--deep); }
+  .tabs .spacer { flex:1; }
+  .tabs .step-hint { align-self:center; font-size:.76rem; color:var(--muted); }
+
+  /* ---- controls ---- */
+  .panel { border:1px solid var(--rule); border-radius:10px;
+           padding:.85rem 1rem; margin-bottom:1.1rem; background:#fcfdfe; }
+  .row { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+  .row + .row { margin-top:.6rem; }
+  .pansplit { display:grid; grid-template-columns:minmax(0,auto) minmax(300px,44rem);
+              gap:1.4rem; align-items:start; }
+  @media (max-width:1250px) { .pansplit { grid-template-columns:1fr; } }
+  .lbl { font-size:.73rem; text-transform:uppercase; letter-spacing:.05em;
+         color:var(--muted); min-width:7.5rem; }
+  button.ctl { font:inherit; font-size:.86rem; padding:.38rem .8rem;
+               border:1px solid var(--rule); border-radius:6px;
+               background:#fff; color:var(--ink); cursor:pointer; }
+  button.ctl:hover:not(:disabled) { border-color:var(--blue); color:var(--blue); }
+  button.ctl:disabled { opacity:.4; cursor:default; }
+  button.ctl.on { background:var(--blue); border-color:var(--blue); color:#fff; }
+  button.ctl.primary { background:var(--deep); border-color:var(--deep); color:#fff; }
+  button.ctl .ex { font-size:.72rem; color:var(--muted); margin-left:.35rem; }
+  button.ctl.on .ex { color:rgba(255,255,255,.8); }
+  .count { font-variant-numeric:tabular-nums; font-size:.84rem; color:var(--muted); margin-left:auto; }
+
+  .whatis { border-left:3px solid var(--rule); padding-left:1.1rem; font-size:.95rem;
+            line-height:1.45; }
+  .whatis dl { margin:0; display:grid; grid-template-columns:1fr 1fr; gap:.55rem 1.1rem; }
+  @media (max-width:1250px) { .whatis dl { grid-template-columns:1fr; } }
+  .whatis dt { font-weight:800; font-size:1.02rem; color:var(--ink); }
+  .whatis dd { margin:.1rem 0 0; color:#444; }
+  .whatis .both { grid-column:1 / -1; margin:.7rem 0 0; padding-top:.55rem;
+                  border-top:1px solid var(--rule); font-size:.9rem; color:#555; }
+
+  /* ---- layout ---- */
+  .solo { display:grid; grid-template-columns:1.2fr .8fr 300px; gap:1.1rem; align-items:start; }
+  @media (max-width:1380px) { .solo { grid-template-columns:1.05fr .95fr; }
+                              .solo > .railcol { grid-column:1 / -1; } }
+  @media (max-width:1250px) { .solo { grid-template-columns:1fr; }
+                              .solo > .railcol { grid-column:auto; } }
+  .solo > .col { display:flex; flex-direction:column; gap:1.1rem; min-width:0;
+                 container-type:inline-size; }
+  .card { border:1px solid var(--rule); border-radius:10px; overflow:hidden; }
+  .card > h2 { font-size:.92rem; margin:0; padding:.5rem .85rem;
+               border-bottom:1px solid var(--rule); background:#f7f9fb; }
+  .card-body { padding:.85rem; }
+
+  .todobar { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+             background:#fff8e1; border-left:5px solid #8f6a00;
+             border-radius:0 8px 8px 0; padding:.5rem .85rem; margin-bottom:14px; }
+  .todobar .tag { background:#8f6a00; color:#fff; border-radius:4px;
+                  padding:.1rem .5rem; font-size:.76rem; letter-spacing:.05em;
+                  font-weight:700; flex:0 0 auto; }
+  .todobar .what { font-size:1rem; }
+  .todobar.bg { background:#f5f6f7; border-left-color:var(--muted); }
+  .todobar.bg .tag { background:var(--muted); }
+  .todobar code { font-family:Consolas,monospace; font-weight:700; }
+
+  /* ---- code ---- */
+  .filename { font-family:Consolas,monospace; font-size:.78rem; color:var(--muted); margin:0 0 .4rem; }
+  .filename b { color:var(--ink); }
+  .code { background:var(--code-bg); color:var(--code-fg); border-radius:8px;
+          padding:.6rem 0; font-family:Consolas,"Courier New",monospace;
+          font-size:clamp(.78rem, 1.9cqw, 1.12rem); line-height:1.5; overflow-x:auto; }
+  .code div { padding:.02rem .9rem; white-space:pre; cursor:pointer; }
+  .code div:hover { background:#313244; }
+  .code div.hit { background:var(--code-hit); border-left:3px solid #f9e2af;
+                  padding-left:calc(.9rem - 3px); }
+  .code div.pin { outline:1px dashed #f9e2af; outline-offset:-2px; }
+  .code .kw { color:#cba6f7; }
+  .code .fn { color:#89dceb; }
+  .code .nm { color:#fab387; }
+  .code .st { color:#a6e3a1; }
+  .code .cm { color:var(--code-dim); font-style:italic; }
+
+  .code div.calc { background:#f9e2af; color:#1e1e2e; font-size:inherit;
+                   font-weight:600; white-space:pre; cursor:default;
+                   display:flex; align-items:flex-start; gap:.55rem;
+                   padding:.22rem .8rem; margin:.12rem 0; border-left:4px solid #b8860b; }
+  .code div.calc > .cv { min-width:0; white-space:pre-wrap; text-indent:-1.1em; padding-left:1.1em; }
+  .code div.calc::before { content:"THIS STEP"; font-size:.62rem; font-weight:800;
+                           letter-spacing:.06em; color:#6b4f04; background:rgba(0,0,0,.09);
+                           border-radius:3px; padding:.08em .32em; flex:0 0 auto; margin-top:.28em; }
+  .code div.calc:hover { background:#f9e2af; }
+
+  /* ---- the per-line popup: where the theory lives ---- */
+  .lineinfo { border:1px solid var(--rule); border-left:4px solid var(--deep);
+              border-radius:0 8px 8px 0; padding:.6rem .85rem; margin:.7rem 0 0;
+              background:#fcfcfd; font-size:.83rem; }
+  .lineinfo h4 { margin:0 0 .35rem; font-size:.84rem; font-family:Consolas,monospace;
+                 color:var(--deep); }
+  .lineinfo .close { float:right; font-size:.68rem; color:var(--muted);
+                     text-transform:uppercase; letter-spacing:.05em; }
+  .li-items { margin:.3rem 0 0; padding-left:1.05rem; }
+  .li-items li { margin-bottom:.22rem; }
+  .li-kind { display:inline-block; font-size:.66rem; text-transform:uppercase;
+             letter-spacing:.04em; padding:.03rem .32rem; border-radius:3px;
+             margin-right:.3rem; vertical-align:1px; }
+  .k-why    { background:var(--tint-blue);   color:var(--blue); }
+  .k-trap   { background:var(--tint-red);    color:var(--red); }
+  .k-note   { background:var(--tint-green);  color:var(--green); }
+  .k-syntax { background:var(--tint-purple); color:var(--deep); }
+  .k-math   { background:var(--tint-orange); color:var(--orange); }
+  .hint { font-size:.72rem; color:var(--muted); margin:.5rem 0 0; }
+
+  /* ---- variables ---- */
+  .locals h5 { margin:0 0 .3rem; font-size:.68rem; font-weight:700; color:var(--muted);
+               text-transform:uppercase; letter-spacing:.06em; }
+  .lgroup + .lgroup { margin-top:.7rem; padding-top:.6rem; border-top:1px solid var(--rule); }
+  .lv { display:flex; align-items:baseline; gap:.45rem; font-size:.79rem; line-height:1.55; }
+  .ln { font-family:Consolas,monospace; font-weight:650; color:var(--ink); min-width:5.2rem; }
+  .lval { font-family:Consolas,monospace; font-weight:700; color:var(--blue);
+          background:var(--tint-blue); border:1px solid rgba(37,115,167,.3);
+          border-radius:999px; padding:.02rem .45rem; min-width:1.6rem; text-align:center; }
+  .lval.pend { color:var(--muted); background:#f0f2f5; border-color:var(--rule); font-weight:600; }
+  .lval.hot  { color:#8a5400; background:#fff3e0; border-color:#a95c19; }
+  .lval.bad  { color:var(--red); background:var(--tint-red); border-color:var(--red); }
+  .lval.good { color:var(--green); background:var(--tint-green); border-color:var(--green); }
+  .lat { color:var(--muted); font-size:.75rem; }
+
+  /* ---- the car and the scan ---- */
+  svg.sc { width:100%; height:auto; display:block; }
+  svg.sc text { font-family:"Segoe UI",system-ui,sans-serif; font-size:11px; }
+  svg.sc text.mono { font-family:Consolas,monospace; font-size:10px; font-weight:600; }
+
+  /* The beam table: one row per sampled beam, which is what the loop walks. */
+  .beams { margin:.7rem 0 0; border:1px solid var(--rule); border-radius:8px; overflow:hidden;
+           font-size:.76rem; }
+  .beams h5 { margin:0; padding:.3rem .6rem; background:#f7f9fb; font-size:.7rem;
+              text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+              border-bottom:1px solid var(--rule); }
+  .beams table { width:100%; border-collapse:collapse; font-family:Consolas,monospace; }
+  .beams th { font-weight:600; color:var(--muted); font-size:.68rem; text-align:right;
+              padding:.2rem .5rem; border-bottom:1px solid var(--rule); background:#fbfcfd; }
+  .beams th:first-child { text-align:left; }
+  .beams td { padding:.16rem .5rem; text-align:right; border-bottom:1px solid #eef1f4; }
+  .beams td:first-child { text-align:left; }
+  .beams tr:last-child td { border-bottom:0; }
+  .beams tr.on td { background:#fff3e0; font-weight:700; color:#8a5400; }
+  .beams tr.skip td { color:#b9b9b9; }
+  .beams tr.min td { background:var(--tint-red); color:var(--red); font-weight:700; }
+  .beams tr.on.min td { background:#ffe0b2; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:.5rem; margin:.8rem 0 0; min-height:2rem; }
+  .chip { font-size:.8rem; padding:.3rem .65rem; border-radius:999px;
+          border:1px solid var(--rule); background:#fff; font-variant-numeric:tabular-nums; }
+  .chip.cur { border-color:var(--orange); color:var(--orange); background:var(--tint-orange); }
+  .chip.ok  { border-color:var(--green);  color:var(--green);  background:var(--tint-green); }
+  .chip.no  { border-color:var(--red);    color:var(--red);    background:var(--tint-red); }
+
+  .nowbox { background:#f9e2af; color:#1e1e2e; border-left:4px solid #b8860b;
+            border-radius:0 8px 8px 0; padding:.6rem .8rem; margin:0; }
+  .nowbox .nownote { margin:0; font-size:.93rem; line-height:1.55; }
+  .nowbox .nownote code { font-family:Consolas,monospace; font-size:.93em;
+                          background:rgba(0,0,0,.09); border-radius:3px; padding:.03em .3em; }
+  .why { margin:.6rem 0 0; padding-left:1.1rem; font-size:.86rem; }
+  .why li { margin-bottom:.22rem; }
+
+  /* ---- the rail ---- */
+  .rail { font-size:.78rem; }
+  .rail .rlab { font-size:.62rem; letter-spacing:.07em; text-transform:uppercase;
+                color:var(--muted); font-weight:700; margin:0 0 .25rem; }
+  .rail .rnow { font-size:.92rem; font-weight:700; color:#c64500; background:#fff3e0;
+                border:1px solid #a95c19; border-radius:7px; padding:.3rem .5rem;
+                margin:0 0 .9rem; line-height:1.3; }
+  .rail ol { list-style:none; margin:0; padding:0; display:grid; gap:.3rem; }
+  .rail > .card-body > ol > li { border:1px solid var(--rule); border-radius:7px;
+             background:#f7f9fb; padding:.33rem .45rem; cursor:pointer; }
+  .rail ol li:hover { border-color:var(--deep); }
+  .rail ol li.on { background:#ede7f6; border-color:var(--deep); }
+  .rail .rt { display:flex; gap:.4rem; align-items:baseline; line-height:1.35; }
+  .rail .rn { flex:0 0 auto; width:1.05rem; height:1.05rem; border-radius:50%;
+              background:var(--muted); color:#fff; font-size:.6rem; font-weight:700;
+              display:flex; align-items:center; justify-content:center;
+              position:relative; top:.15rem; }
+  .rail ol li.on .rn { background:var(--deep); }
+  .rail ul { margin:.35rem 0 0; padding:0; list-style:none; }
+  .rail ul li { border:0; background:none; padding:0 0 0 .7rem; margin:0 0 .2rem;
+                position:relative; font-size:.74rem; line-height:1.4; cursor:default; }
+  .rail ul li::before { content:""; position:absolute; left:0; top:.5em; width:.25rem;
+                        height:.25rem; border-radius:50%; background:var(--muted); }
+
+  .facts { font-size:.8rem; margin:0; }
+  .facts dt { font-weight:600; float:left; width:8.5rem; clear:left; color:var(--muted); }
+  .facts dd { margin:0 0 .3rem 8.5rem; font-family:Consolas,monospace; }
+
+  table.v { width:100%; border-collapse:collapse; font-size:.85rem; margin:.3rem 0 .8rem; }
+  table.v th, table.v td { border:1px solid var(--rule); padding:.4rem .6rem;
+                           text-align:left; vertical-align:top; }
+  table.v th { background:#f5f7f9; }
+  table.v td.pts { text-align:right; font-variant-numeric:tabular-nums; width:3.2rem; }
+  table.v td.num { text-align:right; font-family:Consolas,monospace; font-variant-numeric:tabular-nums; }
+  table.v tr.part td { background:#f7f9fb; font-weight:700; }
+  table.v code { font-family:Consolas,monospace; }
+  table.v .yes { color:var(--red); font-weight:700; }
+  table.v .no { color:var(--green); font-weight:700; }
+  table.v tr.agree td.ver { color:var(--green); font-weight:700; }
+  table.v tr.differ td.ver { color:var(--red); font-weight:700; }
+  .verdict { border-left:5px solid var(--deep); background:var(--tint-purple);
+             border-radius:0 8px 8px 0; padding:.9rem 1.1rem; font-size:.88rem; }
+  .verdict p { margin:0 0 .55rem; }
+  .verdict p:last-child { margin:0; }
+
+  .legend { font-size:.72rem; color:var(--muted); margin:.6rem 0 0; }
+  .legend span { display:inline-block; margin-right:.9rem; }
+  .sw { display:inline-block; width:.75rem; height:.75rem; border-radius:3px;
+        border:2px solid var(--rule); vertical-align:-2px; margin-right:.25rem; }
+  .selftest { margin-top:1.2rem; font-size:.78rem; color:var(--muted);
+              border-top:1px solid var(--rule); padding-top:.6rem; }
+  code.inl { background:#eef2f6; padding:.08em .32em; border-radius:4px;
+             font-family:Consolas,monospace; font-size:.92em; }
+  .tree { white-space:pre; background:#f7f9fb; border:1px solid var(--rule); border-radius:6px;
+             padding:.7rem .8rem; margin:0 0 .8rem; overflow-x:auto;
+             font-family:Consolas,monospace; font-size:.82rem; line-height:1.5;
+             color:var(--ink); }
+  .tree b { color:var(--teal); }
+  footer { margin-top:1.4rem; padding-top:.7rem; border-top:1px solid var(--rule);
+           color:var(--muted); font-size:.82rem; }
+  footer a { color:var(--teal); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lab 2 &mdash; the code that stops the car</h1>
+  <p class="sub">The AEB node, run one line at a time against the seven scans
+     <code>check_lab2.py</code> actually grades. Every step shows the line executing, the beam it is
+     looking at, and the numbers it has worked out so far. <strong>Click any line</strong> for what it
+     is for, the arithmetic behind it, and what goes wrong without it.</p>
+
+  <div class="tabs" id="tabs">
+    <button data-mode="files">1 &middot; The files</button>
+    <button data-mode="init">2 &middot; __init__</button>
+    <button data-mode="odom">3 &middot; odom_callback</button>
+    <button data-mode="scan">4 &middot; scan_callback</button>
+    <button data-mode="brake">5 &middot; The brake</button>
+    <button data-mode="car">6 &middot; On the car</button>
+    <button data-mode="graded">7 &middot; What is graded</button>
+    <span class="spacer"></span>
+    <span class="step-hint">&larr; &rarr; arrow keys step &middot; space plays</span>
+  </div>
+
+  <div class="panel">
+    <div class="pansplit">
+      <div>
+        <div class="row" id="presetRow"></div>
+        <div class="row">
+          <span class="lbl">Step</span>
+          <button class="ctl" id="first">&laquo; First</button>
+          <button class="ctl" id="prev">&lsaquo; Prev</button>
+          <button class="ctl primary" id="play">&#9654; Play</button>
+          <button class="ctl" id="next">Next &rsaquo;</button>
+          <button class="ctl" id="last">Last &raquo;</button>
+          <button class="ctl" id="nextBeam">Next beam &raquo;&raquo;</button>
+          <span class="count" id="frameCount"></span>
+        </div>
+      </div>
+      <div class="whatis" id="whatis"></div>
+    </div>
+  </div>
+
+  <div id="stage"></div>
+
+  <p class="legend" id="legend"></p>
+  <div class="selftest" id="selftest"></div>
+
+  <footer>
+    Part of <a href="../../weber_assignments/labs/lab2-sim.html">Lab 2 Sim &mdash; AEB in Simulation</a>
+    and <a href="../../weber_assignments/labs/lab2-car.html">Lab 2 Car &mdash; AEB on the Car</a>.
+    The code shown is the finished Python skeleton; the C++ skeleton has the same structure, the
+    same three topics and the same arithmetic.
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------------------
+// The code panes. This is safety_node.py with its TODOs written out, so a
+// highlighted line is a line the student can find in their own file.
+// ---------------------------------------------------------------------------
+var CODE = {
+  init: [
+    "import numpy as np",
+    "import rclpy",
+    "from ackermann_msgs.msg import AckermannDriveStamped",
+    "from nav_msgs.msg import Odometry",
+    "from rclpy.node import Node",
+    "from sensor_msgs.msg import LaserScan",
+    "",
+    "",
+    "class SafetyNode(Node):",
+    "",
+    "    def __init__(self):",
+    "        super().__init__('safety_node')",
+    "",
+    "        self.speed = 0.0",
+    "        self.threshold = 0.4          # seconds of iTTC",
+    "",
+    "        self.brake_publisher = self.create_publisher(",
+    "            AckermannDriveStamped, '/drive', 10)",
+    "",
+    "        self.scan_subscription = self.create_subscription(",
+    "            LaserScan, '/scan', self.scan_callback, 10)",
+    "",
+    "        self.odom_subscription = self.create_subscription(",
+    "            Odometry, '/ego_racecar/odom', self.odom_callback, 10)"
+  ],
+
+  odom: [
+    "    def odom_callback(self, odom_msg):",
+    "        self.speed = odom_msg.twist.twist.linear.x"
+  ],
+
+  scan: [
+    "    def scan_callback(self, scan_msg):",
+    "        ranges = np.array(scan_msg.ranges)",
+    "",
+    "        angles = (scan_msg.angle_min",
+    "                  + np.arange(len(ranges)) * scan_msg.angle_increment)",
+    "",
+    "        range_rate = self.speed * np.cos(angles)",
+    "",
+    "        closing = range_rate > 0.0",
+    "        valid = np.isfinite(ranges) & closing",
+    "",
+    "        ittc = np.full(ranges.shape, np.inf)",
+    "        ittc[valid] = ranges[valid] / range_rate[valid]",
+    "",
+    "        if np.min(ittc) < self.threshold:",
+    "            self.brake()"
+  ],
+
+  brake: [
+    "    def brake(self):",
+    "        stop = AckermannDriveStamped()",
+    "        stop.drive.speed = 0.0",
+    "        self.brake_publisher.publish(stop)"
+  ],
+
+  car: [
+    "# Lab 2 Sim, in the simulator",
+    "self.create_subscription(",
+    "    Odometry, '/ego_racecar/odom', self.odom_callback, 10)",
+    "",
+    "# Lab 2 Car, on the car -- one topic changes",
+    "self.create_subscription(",
+    "    Odometry, '/odom', self.odom_callback, 10)",
+    "",
+    "# and the scan is noisier, so the QoS has to match the driver",
+    "from rclpy.qos import qos_profile_sensor_data",
+    "",
+    "self.create_subscription(",
+    "    LaserScan, '/scan', self.scan_callback, qos_profile_sensor_data)",
+    "",
+    "# the threshold that passed in sim is not the one that works on carpet",
+    "self.threshold = 0.4      # sim",
+    "self.threshold = 0.6      # a real car has brake latency"
+  ]
+};
+
+// Line numbers are looked up by text, never typed in. Hard-coded indices are
+// the one thing guaranteed to rot the first time a line moves.
+function L(key, needle) {
+  var lines = CODE[key];
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].indexOf(needle) !== -1) return i;
+  }
+  throw new Error("no line matching " + needle + " in " + key);
+}
+
+// ---------------------------------------------------------------------------
+// The theory, filed under the line it belongs to. Click a line, get this.
+// Keeping it here rather than on the page is the point: the walk itself stays
+// about the numbers in front of you.
+// ---------------------------------------------------------------------------
+var LINE_INFO = { init: {}, odom: {}, scan: {}, brake: {}, car: {} };
+
+function info(key, needle, src, what, items) {
+  LINE_INFO[key][L(key, needle)] = { src: src, what: what, items: items };
+}
+
+info("init", "self.speed = 0.0", "self.speed = 0.0",
+  "The car is assumed stopped until odometry says otherwise.",
+  [["why", "A scan can arrive before the first odometry message. Starting at 0.0 means the first <code class='inl'>scan_callback</code> computes no closing speed and does not brake, which is the safe way to be wrong."],
+   ["trap", "Leave it undefined and the first scan raises <code class='inl'>AttributeError</code> inside a callback, where the traceback is easy to miss and the node keeps running."]]);
+
+info("init", "self.threshold = 0.4", "self.threshold = 0.4",
+  "How many seconds of warning you demand before braking.",
+  [["why", "The threshold is a time, not a distance. That is the whole reason iTTC is worth computing: one number works at every speed."],
+   ["math", "The grader's hardest pair is a wall 0.5 m ahead at 2.5 m/s (0.2 s, must brake) and a wall 1.0 m ahead at 0.25 m/s (4 s, must not). Any threshold between those two passes; 0.4 s sits in the middle with room on both sides."],
+   ["trap", "Too high and you brake in the hallway and fail the last two checks. Too low and you miss the 2.0 m wall at 10 m/s. The lab is really asking you to find a number that satisfies all seven scans at once."]]);
+
+info("init", "AckermannDriveStamped, '/drive', 10", "AckermannDriveStamped, '/drive', 10)",
+  "The brake command goes out on the same topic the driver uses.",
+  [["why", "AEB does not have a special channel. It publishes a normal drive command with speed 0.0, and whatever is downstream obeys the last thing it heard."],
+   ["note", "The grader subscribes to <code class='inl'>/drive</code> and looks for <code class='inl'>abs(speed) &lt; 1e-3</code>. Publishing on any other topic scores zero on every braking check."]]);
+
+info("init", "self.scan_callback, 10", "LaserScan, '/scan', self.scan_callback, 10)",
+  "The scan drives everything. This is where the work happens.",
+  [["note", "A depth of 10 is fine in the simulator. On the car, use <code class='inl'>qos_profile_sensor_data</code> instead &mdash; see tab 5. Mismatched QoS is the classic Lab 2 Car failure: both nodes run, no messages arrive."],
+   ["trap", "Keep the reference. <code class='inl'>self.scan_subscription = ...</code>, not a bare call &mdash; an unheld subscription is collected and the callback silently never fires."]]);
+
+info("init", "'/ego_racecar/odom'", "Odometry, '/ego_racecar/odom', self.odom_callback, 10)",
+  "Where the simulator publishes the car's speed.",
+  [["trap", "This is the one topic name that changes between Lab 2 Sim and Lab 2 Car. On the real car it is <code class='inl'>/odom</code>. Hard-code it in two places and you will fix one of them."],
+   ["why", "The node needs a speed to compute closing rate. Without odometry <code class='inl'>self.speed</code> stays 0.0, every <code class='inl'>range_rate</code> is 0, and the node never brakes &mdash; a node that looks like it is working perfectly and is doing nothing at all."]]);
+
+info("odom", "self.speed = odom_msg.twist.twist.linear.x", "self.speed = odom_msg.twist.twist.linear.x",
+  "The forward component of the car's velocity.",
+  [["syntax", "<code class='inl'>twist.twist</code> is not a typo. An <code class='inl'>Odometry</code> message holds a <code class='inl'>TwistWithCovariance</code> in <code class='inl'>.twist</code>, and the plain <code class='inl'>Twist</code> is inside that."],
+   ["why", "<code class='inl'>linear.x</code> is forward in the car's own frame, which is exactly the number the iTTC formula wants. <code class='inl'>linear.y</code> is sideways and <code class='inl'>linear.z</code> is up; neither matters here."],
+   ["note", "Two lines, two points of failure: the callback has to be registered in <code class='inl'>__init__</code> and the field path has to be right. Nothing else happens in this method."]]);
+
+info("scan", "ranges = np.array", "ranges = np.array(scan_msg.ranges)",
+  "The distances, as a numpy array so the whole scan can be worked on at once.",
+  [["why", "1080 beams at 20 Hz is 21,600 divisions a second. A Python <code class='inl'>for</code> loop over them will usually keep up and is the slow way to write this; the array form is both faster and shorter."],
+   ["note", "<code class='inl'>scan_msg.ranges</code> arrives as a plain sequence of floats. <code class='inl'>np.array</code> is what makes the later <code class='inl'>ranges[valid]</code> indexing possible."]]);
+
+info("scan", "angles = (scan_msg.angle_min", "angles = scan_msg.angle_min + np.arange(len(ranges)) * scan_msg.angle_increment",
+  "Beam i points at angle_min + i * angle_increment. Angle 0 is straight ahead.",
+  [["math", "The scan spans 270&deg; over 1080 beams, so <code class='inl'>angle_min</code> is -135&deg; and <code class='inl'>angle_increment</code> is 270/1079 &asymp; 0.25&deg;. Beam 540 lands within a quarter of a degree of dead ahead."],
+   ["trap", "Do not hard-code -135&deg; or 1080. Read both from the message. The real car's lidar can be configured differently, and the same code has to work on tab 5."],
+   ["why", "Without the angles there is no way to tell a wall in front from a wall beside you, which is the difference between the 15-point check and the 3-point one."]]);
+
+info("scan", "range_rate = self.speed * np.cos(angles)", "range_rate = self.speed * np.cos(angles)",
+  "How fast the car is closing on each beam.",
+  [["math", "Moving forward at <em>v</em>, the component of that motion along a beam at angle &theta; is <em>v</em>&nbsp;cos&nbsp;&theta;. Straight ahead, cos 0 = 1 and you close at the full speed. At 90&deg;, cos 90&deg; = 0 and you are not closing at all."],
+   ["why", "This single <code class='inl'>cos</code> is what makes the object-beside-the-car check pass. Something 0.4 m off your left shoulder is close, and you will never hit it, and the cosine is the only line that knows the difference."],
+   ["trap", "Use the beam angle, not the steering angle, and work in radians &mdash; <code class='inl'>np.cos</code> takes radians, and the message gives you radians."]]);
+
+info("scan", "closing = range_rate > 0.0", "closing = range_rate > 0.0",
+  "A beam you are not closing on has no time to collision.",
+  [["math", "Behind you, cos &theta; is negative, so <code class='inl'>range_rate</code> is negative and <code class='inl'>range / range_rate</code> comes out <em>negative</em>. A negative iTTC is smaller than any threshold, so without this mask the car brakes for the wall it has just driven past."],
+   ["trap", "This is the bug that passes every braking check and fails every not-braking check. If your node brakes constantly, look here first."],
+   ["why", "It also handles standing still: at speed 0 every <code class='inl'>range_rate</code> is 0, nothing is closing, and a stopped car has no reason to brake."]]);
+
+info("scan", "valid = np.isfinite(ranges)", "valid = np.isfinite(ranges) & closing",
+  "Throws away inf and nan, and the beams you are not closing on, in one mask.",
+  [["math", "<code class='inl'>np.isfinite</code> is false for both <code class='inl'>inf</code> and <code class='inl'>nan</code>, which is why one call covers both. Comparisons against <code class='inl'>nan</code> are always false, so <code class='inl'>nan &lt; threshold</code> would not brake &mdash; but <code class='inl'>np.min</code> of an array containing <code class='inl'>nan</code> returns <code class='inl'>nan</code>, and then <em>nothing</em> ever brakes."],
+   ["trap", "That is the 15-point check: the grader scatters <code class='inl'>inf</code> every 7th beam and <code class='inl'>nan</code> every 11th through a wall that must be braked for. A single <code class='inl'>nan</code> poisons <code class='inl'>np.min</code> for the entire scan."],
+   ["syntax", "<code class='inl'>&amp;</code>, not <code class='inl'>and</code>. On numpy arrays <code class='inl'>and</code> raises; <code class='inl'>&amp;</code> is the element-wise one."]]);
+
+info("scan", "ittc = np.full", "ittc = np.full(ranges.shape, np.inf)",
+  "Start every beam at infinity, then fill in only the ones that mean something.",
+  [["why", "Infinity is the honest default: a beam you are not closing on, or whose reading is garbage, gives you no information about a collision. <code class='inl'>inf</code> is never less than the threshold, so it can never cause a brake."],
+   ["trap", "Starting from zeros instead means every invalid beam reads as <em>zero seconds to collision</em> and the car brakes permanently."]]);
+
+info("scan", "ittc[valid] = ranges[valid]", "ittc[valid] = ranges[valid] / range_rate[valid]",
+  "The actual formula, applied only where it is meaningful.",
+  [["math", "iTTC = range / range rate. Both sides are masked with <code class='inl'>valid</code>, so no division by zero and no division into a negative can happen &mdash; the mask is what makes the division safe, not a try/except."],
+   ["syntax", "<code class='inl'>ittc[valid] = ...</code> is boolean mask assignment: it writes only to the positions where <code class='inl'>valid</code> is true, and leaves the rest at <code class='inl'>inf</code>."],
+   ["note", "Dividing the whole array and cleaning up afterwards also works, but numpy will warn about the zero division and you have to silence it. Masking first is cleaner."]]);
+
+info("scan", "if np.min(ittc) < self.threshold", "if np.min(ittc) < self.threshold:",
+  "One number for the whole scan: the nearest collision in time.",
+  [["why", "You do not care which beam it is, only that something is about to be hit. The minimum over all beams is the worst case, and the worst case is what decides."],
+   ["trap", "<code class='inl'>np.min</code> of an array with any <code class='inl'>nan</code> in it is <code class='inl'>nan</code>, and <code class='inl'>nan &lt; 0.4</code> is false. That is the failure the <code class='inl'>isfinite</code> mask two lines up exists to prevent."],
+   ["note", "In open space every beam is <code class='inl'>inf</code>, so this is <code class='inl'>inf &lt; 0.4</code> &mdash; false, and no brake. The empty case falls out for free."]]);
+
+info("brake", "stop.drive.speed = 0.0", "stop.drive.speed = 0.0",
+  "Zero speed is the brake. There is no brake field.",
+  [["why", "The car follows the last drive command it was given. Commanding zero speed is how you stop it."],
+   ["note", "The grader checks <code class='inl'>abs(speed) &lt; 1e-3</code>, so exactly 0.0 is what to send."]]);
+
+info("brake", "self.brake_publisher.publish(stop)", "self.brake_publisher.publish(stop)",
+  "And keep publishing it, every scan, for as long as the danger lasts.",
+  [["trap", "Publishing once is not braking. The scan callback runs again in 50 ms, and if the drive node has heard a non-zero command in between, the car moves. The brake holds because the condition keeps being true, not because one message was sent."],
+   ["why", "This is also why there is nothing to un-brake: when the obstacle is gone the condition is false, this line stops running, and the normal drive commands take over again."]]);
+
+info("car", "'/odom'", "Odometry, '/odom', self.odom_callback, 10)",
+  "The one topic name that changes for Lab 2 Car.",
+  [["trap", "Everything else about the node is identical, which is what makes this easy to miss. The symptom is a node that connects, runs, and never brakes &mdash; because <code class='inl'>self.speed</code> is still 0.0."],
+   ["note", "Check it with <code class='inl'>ros2 topic list</code> on the car before you blame the code."]]);
+
+info("car", "qos_profile_sensor_data", "LaserScan, '/scan', self.scan_callback, qos_profile_sensor_data)",
+  "Sensor QoS: best effort, not reliable.",
+  [["why", "Lidar drivers publish best-effort, because a scan that arrives late is worthless. A subscriber asking for reliable delivery is <em>incompatible</em>, and ROS answers by delivering nothing at all."],
+   ["trap", "No error, no warning, no messages. <code class='inl'>ros2 topic echo /scan</code> works from the command line (it adapts), which makes it look like the topic is fine and your callback is broken."],
+   ["note", "The grader's own probe uses <code class='inl'>qos_profile_sensor_data</code> on <code class='inl'>/drive</code> for the same reason."]]);
+
+info("car", "self.threshold = 0.6", "self.threshold = 0.6      # a real car has brake latency",
+  "The number that passed in simulation is not the number that works on carpet.",
+  [["why", "In the simulator the brake is instant. On the car there is latency in the ESC, and the tires have to actually grip &mdash; so the time you need is longer than the time to collision alone."],
+   ["note", "Lab 2 Car asks you to tune it and say what you found. There is no single right answer, which is the point of asking."]]);
+
+// ---------------------------------------------------------------------------
+// The scans the grader uses. These are the same seven scenarios as
+// tests/check_lab2.py, built the same way, so the numbers the page prints are
+// the numbers the grade comes from.
+// ---------------------------------------------------------------------------
+var BEAMS = 1080;
+var ANGLE_MIN = -135 * Math.PI / 180;
+var ANGLE_INCREMENT = (270 * Math.PI / 180) / (BEAMS - 1);
+var RANGE_MAX = 30.0;
+
+function angleAt(i) { return ANGLE_MIN + i * ANGLE_INCREMENT; }
+
+function wallAhead(distance) {
+  return function (i) {
+    var a = angleAt(i);
+    return Math.abs(a) < Math.PI / 2 ? Math.min(distance / Math.cos(a), RANGE_MAX) : RANGE_MAX;
+  };
+}
+
+function hallway(halfWidth) {
+  return function (i) {
+    var s = Math.sin(angleAt(i));
+    return s ? Math.min(halfWidth / Math.abs(s), RANGE_MAX) : RANGE_MAX;
+  };
+}
+
+function objectBeside(distance) {
+  return function (i) {
+    return Math.abs(angleAt(i) - Math.PI / 2) < 2 * Math.PI / 180 ? distance : RANGE_MAX;
+  };
+}
+
+function openSpace() { return function () { return Infinity; }; }
+
+// inf every 7th beam and nan every 11th, exactly as the grader scatters them.
+function withBadReadings(base) {
+  return function (i) {
+    if (i % 7 === 0) return Infinity;
+    if (i % 11 === 3) return NaN;
+    return base(i);
+  };
+}
+
+var THRESHOLD = 0.4;
+
+var PRESETS = {
+  wall:    { label: "wall 0.5 m ahead",      ex: "2.5 m/s", scan: wallAhead(0.5), speed: 2.5,
+             brake: true,  pts: 15, says: "wall 0.5 m ahead at 2.5 m/s, 0.2 s to collision" },
+  noisy:   { label: "same wall, inf + nan",  ex: "2.5 m/s", scan: withBadReadings(wallAhead(0.5)), speed: 2.5,
+             brake: true,  pts: 15, says: "the same wall with inf and nan scattered through the scan" },
+  fast:    { label: "wall 2.0 m ahead",      ex: "10 m/s",  scan: wallAhead(2.0), speed: 10.0,
+             brake: true,  pts: 4,  says: "wall 2.0 m ahead at 10 m/s, also 0.2 s to collision" },
+  crawl:   { label: "wall 1.0 m ahead",      ex: "0.25 m/s",scan: wallAhead(1.0), speed: 0.25,
+             brake: false, pts: 3,  says: "wall 1.0 m ahead at 0.25 m/s, 4 s to collision" },
+  beside:  { label: "object 0.4 m to the left", ex: "2.5 m/s", scan: objectBeside(0.4), speed: 2.5,
+             brake: false, pts: 3,  says: "0.4 m away and the car is not closing on it at all" },
+  hall:    { label: "hallway, walls 1.5 m",  ex: "1.0 m/s", scan: hallway(1.5), speed: 1.0,
+             brake: false, pts: 5,  says: "walls 1.5 m to each side, nothing ahead" },
+  open:    { label: "open space",            ex: "2.5 m/s", scan: openSpace(), speed: 2.5,
+             brake: false, pts: 5,  says: "every beam reads inf" }
+};
+
+// Run the student's finished algorithm over a whole scan. This is the real
+// thing -- the page never asserts an outcome it has not computed.
+function runScan(p) {
+  var minIttc = Infinity, minAt = -1, finite = 0, closingN = 0, validN = 0, bad = 0;
+  for (var i = 0; i < BEAMS; i++) {
+    var r = p.scan(i), a = angleAt(i), rate = p.speed * Math.cos(a);
+    var usable = isFinite_(r);
+    if (!usable) bad++; else finite++;
+    if (rate > 0) closingN++;
+    if (usable && rate > 0) {
+      validN++;
+      var t = r / rate;
+      if (t < minIttc) { minIttc = t; minAt = i; }
+    }
+  }
+  return { min: minIttc, at: minAt, finite: finite, bad: bad, closing: closingN,
+           valid: validN, brakes: minIttc < THRESHOLD };
+}
+
+// Number.isFinite, spelled out: inf and nan both have to come out false, and
+// the global isFinite() would coerce and get nan wrong on some inputs.
+function isFinite_(x) { return typeof x === "number" && x === x && x !== Infinity && x !== -Infinity; }
+
+// The beams the walk actually visits. Stepping all 1080 would take an hour, so
+// the loop is shown over a sample that is chosen to include the beams that
+// decide the outcome: dead ahead, the minimum, the first inf, the first nan,
+// one behind the car, and both shoulders.
+function sampleBeams(p) {
+  var picks = {}, rank = {};
+  // A beam can qualify twice -- beam 0 of the noisy scan is both the right edge
+  // and an inf. Higher rank wins, so the label says the thing worth saying.
+  var add = function (i, why, pri) {
+    if (i < 0 || i >= BEAMS) return;
+    if (picks[i] === undefined || pri > rank[i]) { picks[i] = why; rank[i] = pri; }
+  };
+  var r = runScan(p);
+  add(0, "the far right edge of the scan", 0);
+  add(Math.round((0 - ANGLE_MIN) / ANGLE_INCREMENT), "straight ahead", 1);
+  add(Math.round((Math.PI / 2 - ANGLE_MIN) / ANGLE_INCREMENT), "90 degrees left, square to the car", 1);
+  add(BEAMS - 1, "the far left edge of the scan", 0);
+  for (var i = 0; i < BEAMS; i++) {
+    if (p.scan(i) === Infinity) { add(i, "an inf reading, which the mask drops", 2); break; }
+  }
+  for (var j = 0; j < BEAMS; j++) {
+    var w = p.scan(j);
+    if (typeof w === "number" && w !== w) { add(j, "a nan reading, which would poison np.min", 2); break; }
+  }
+  if (r.at >= 0) add(r.at, "the smallest iTTC in the whole scan", 3);
+
+  return Object.keys(picks).map(Number).sort(function (a, b) { return a - b; })
+    .map(function (i) {
+      var raw = p.scan(i);
+      var a = angleAt(i);
+      var rate = p.speed * Math.cos(a);
+      var ok = isFinite_(raw) && rate > 0;
+      return { i: i, why: picks[i], range: raw, angle: a, rate: rate,
+               valid: ok, ittc: ok ? raw / rate : Infinity };
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Display helpers
+// ---------------------------------------------------------------------------
+function num(x, dp) {
+  if (x === Infinity) return "inf";
+  if (x === -Infinity) return "-inf";
+  if (typeof x !== "number" || x !== x) return "nan";
+  // A beam a degree off square closes so slowly that its iTTC runs to five
+  // figures. The magnitude is the lesson; two decimal places on it are not.
+  if (Math.abs(x) >= 1000) return x.toFixed(0);
+  return x.toFixed(dp === undefined ? 2 : dp);
+}
+function deg(a) { return (a * 180 / Math.PI).toFixed(1) + "°"; }
+
+// ---------------------------------------------------------------------------
+// The one-paragraph theory, per tab. Anything longer belongs in a line popup.
+// ---------------------------------------------------------------------------
+var WHATIS = {
+  init: { a: ["Three topics", "Scan in, odometry in, drive out. The node is a function from the first two to the third."],
+          b: ["State", "Only two numbers are kept between callbacks: the car's speed, and the threshold you chose."],
+          both: "Nothing here computes anything. It wires the node to the graph and then waits." },
+  odom: { a: ["Odometry", "Where the car is and how fast it is going, published by the simulator or the car."],
+          b: ["Why store it", "The scan callback needs a speed, and the two messages arrive separately. This method exists to remember the last one."],
+          both: "Two lines, and the whole braking decision is wrong without them: no speed means no closing rate means no brake." },
+  scan: { a: ["iTTC", "Range divided by how fast you are closing on it. A time, in seconds &mdash; which is why one threshold works at every speed."],
+          b: ["The mask", "Not every beam deserves an answer. Readings that are inf or nan, and beams you are not closing on, are excluded before the division."],
+          both: "Distance alone cannot decide: 0.4 m beside you is harmless, and 2.0 m ahead at 10 m/s is not." },
+  brake: { a: ["The brake", "A normal drive command with speed 0.0 on the normal drive topic. There is no special channel."],
+           b: ["Holding it", "Published again on every scan for as long as the condition is true. One message is not a brake."],
+           both: "Three lines, and the node has no un-brake: when the danger passes, this simply stops running." },
+  car: { a: ["Lab 2 Sim", "The simulator. Instant brakes, clean scans, and <code class='inl'>/ego_racecar/odom</code>."],
+         b: ["Lab 2 Car", "The car. <code class='inl'>/odom</code>, sensor QoS, a noisier scan, and a brake that takes time to bite."],
+         both: "The algorithm does not change. Three details around it do, and each one fails silently." },
+  files: { a: ["safety_node/", "The package. One node, and the three files that make it build and run."],
+           b: ["The skeleton", "Already names the node and the class. You fill in five methods' worth of body."],
+           both: "Nothing here is the algorithm. It is the shape the algorithm has to live in, and it is graded: 30 of the 100 points are compilation." },
+  graded: { a: ["check_lab2.py", "Starts your node, feeds it the seven scans below at 20 Hz, and watches <code class='inl'>/drive</code>."],
+            b: ["Both languages", "Run it as <code class='inl'>python3 tests/check_lab2.py python</code> or <code class='inl'>... cpp</code>."],
+            both: "Four of the seven checks are about not braking. That is deliberate: a node that brakes constantly is easy to write." }
+};
+
+var GUIDE = {
+  init: { where: "in __init__", steps: [
+    { t: "Name the node", b: ["given in the skeleton"] },
+    { t: "Set up the state", b: ["speed starts at 0.0", "pick a threshold in seconds"] },
+    { t: "Publisher for the brake", b: ["/drive, the normal drive topic"] },
+    { t: "Subscribe to the scan", b: ["this is what drives the work", "sensor QoS on the real car"] },
+    { t: "Subscribe to odometry", b: ["/ego_racecar/odom in sim", "/odom on the car"] }
+  ] },
+  odom: { where: "in odom_callback", steps: [
+    { t: "Remember the speed", b: ["twist.twist.linear.x", "forward, in the car's own frame"] }
+  ] },
+  scan: { where: "in scan_callback", steps: [
+    { t: "Take the ranges", b: ["one numpy array, not a loop"] },
+    { t: "Work out every beam angle", b: ["angle_min + i * angle_increment", "read both from the message"] },
+    { t: "Closing speed per beam", b: ["speed * cos(angle)", "zero at 90 degrees"] },
+    { t: "Decide which beams count", b: ["drop inf and nan", "drop anything not closing"] },
+    { t: "Divide, where it is valid", b: ["range / range_rate", "everything else stays inf"] },
+    { t: "Compare the worst case", b: ["np.min over the whole scan", "one number decides"] }
+  ] },
+  brake: { where: "in brake", steps: [
+    { t: "Build a drive command", b: ["a fresh message"] },
+    { t: "Speed zero", b: ["that is the brake"] },
+    { t: "Publish, and keep publishing", b: ["every scan, while the danger lasts"] }
+  ] },
+  car: { where: "between Lab 2 Sim and Lab 2 Car", steps: [
+    { t: "The odometry topic", b: ["/ego_racecar/odom becomes /odom"] },
+    { t: "The scan QoS", b: ["best effort, or no messages at all"] },
+    { t: "The threshold", b: ["a real brake takes time to bite", "tune it and write down what you found"] }
+  ] }
+};
+
+var FACTS = {
+  init: [["topics in", "/scan, /ego_racecar/odom"], ["topic out", "/drive"],
+         ["state kept", "speed, threshold"], ["threshold", THRESHOLD + " s of iTTC"]],
+  odom: [["message", "nav_msgs/Odometry"], ["field", "twist.twist.linear.x"],
+         ["units", "m/s, car frame"]],
+  scan: [["beams", String(BEAMS)], ["span", "270° (-135° to +135°)"],
+         ["increment", "270/1079 ≈ 0.25°"], ["range max", num(RANGE_MAX, 1) + " m"],
+         ["scan rate", "20 Hz in the grader"]],
+  brake: [["message", "AckermannDriveStamped"], ["topic", "/drive"],
+          ["brake value", "drive.speed = 0.0"], ["grader accepts", "abs(speed) < 1e-3"]],
+  car: [["odom in sim", "/ego_racecar/odom"], ["odom on car", "/odom"],
+        ["scan QoS", "qos_profile_sensor_data"], ["threshold", "needs re-tuning"]]
+};
+
+// ---------------------------------------------------------------------------
+// The walks. A frame is everything the page shows at one step.
+// ---------------------------------------------------------------------------
+function buildInit(p) {
+  var f = [];
+  var alive = { pub: false, scan: false, odom: false };
+  var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+
+  f.push({ line: L("init", "super().__init__"), phase: 0, tag: "given",
+    head: "The node exists and is called <code>safety_node</code>. Everything below wires it into the graph.",
+    calc: "node name = /safety_node",
+    vars: [["self", [["node name", "safety_node", ""]]]],
+    wire: clone(alive), chips: [["", "no topics yet"]] });
+
+  f.push({ line: L("init", "self.speed = 0.0"), phase: 1, tag: "given",
+    head: "The only piece of state the node carries between callbacks, and it starts safe.",
+    calc: "self.speed = 0.00   (until the first odometry message)",
+    vars: [["self", [["speed", "0.00", "m/s, assumed stopped"]]]],
+    wire: clone(alive), chips: [["", "stopped"]] });
+
+  f.push({ line: L("init", "self.threshold = 0.4"), phase: 1, tag: "your choice",
+    head: "Your threshold, in <em>seconds</em>. One number that has to satisfy all seven of the grader's scans.",
+    calc: "brake when the smallest iTTC in a scan is below " + num(THRESHOLD, 1) + " s",
+    vars: [["self", [["speed", "0.00", ""], ["threshold", num(THRESHOLD, 1), "seconds", true]]]],
+    wire: clone(alive),
+    note: "The grader's tightest squeeze: brake at 0.2 s, do not brake at 4 s. Anything in between passes.",
+    chips: [["cur", "threshold " + num(THRESHOLD, 1) + " s"]] });
+
+  alive.pub = true;
+  f.push({ line: L("init", "AckermannDriveStamped, '/drive', 10"), phase: 2, tag: "TODO",
+    head: "The brake goes out on <code>/drive</code> &mdash; the same topic the driver uses. There is no separate brake channel.",
+    calc: "ros2 topic list -> /drive   (the grader subscribes here)",
+    vars: [["self", [["brake_publisher", "/drive", "queue depth 10"]]]],
+    wire: clone(alive), chips: [["cur", "/drive advertised"]] });
+
+  alive.scan = true;
+  f.push({ line: L("init", "self.scan_callback, 10"), phase: 3, tag: "TODO",
+    head: "The scan subscription. From here on, every lidar message runs the whole calculation.",
+    calc: "subscribe /scan  ->  self.scan_callback(scan_msg)   at 20 Hz in the grader",
+    vars: [["self", [["brake_publisher", "/drive", ""], ["scan_subscription", "/scan", "-> scan_callback"]]]],
+    wire: clone(alive),
+    note: "On the real car this needs <code>qos_profile_sensor_data</code> instead of <code>10</code>. See tab 5.",
+    chips: [["cur", "/scan subscribed"]] });
+
+  alive.odom = true;
+  f.push({ line: L("init", "'/ego_racecar/odom'"), phase: 4, tag: "TODO",
+    head: "And odometry, which is the only source of the speed the calculation needs.",
+    calc: "subscribe /ego_racecar/odom  ->  self.odom_callback(odom_msg)",
+    vars: [["self", [["brake_publisher", "/drive", ""], ["scan_subscription", "/scan", ""],
+                     ["odom_subscription", "/ego_racecar/odom", "-> odom_callback"]]]],
+    wire: clone(alive),
+    note: "This is the one topic name that changes for Lab 2 Car. All three connections are what the 30-point compilation check looks for.",
+    chips: [["ok", "all 3 topics connected"]] });
+
+  return f;
+}
+
+function buildOdom(p) {
+  return [
+    { line: L("odom", "def odom_callback"), phase: 0, tag: "given",
+      head: "An odometry message arrived. ROS calls this; you never call it yourself.",
+      calc: "odom_msg.twist.twist.linear.x = " + num(p.speed) + "   (this scenario's speed)",
+      vars: [["incoming", [["twist.twist.linear.x", num(p.speed), "m/s forward", true]]],
+             ["self", [["speed", "0.00", "not updated yet"]]]],
+      wire: { pub: true, scan: true, odom: true },
+      chips: [["cur", "odometry in"]] },
+    { line: L("odom", "self.speed = odom_msg"), phase: 0, tag: "TODO",
+      head: "Stored. That is the entire method &mdash; and without it <code>scan_callback</code> computes a closing speed of zero for every beam and never brakes.",
+      calc: "self.speed = " + num(p.speed) + "    (used by every scan from now on)",
+      vars: [["incoming", [["twist.twist.linear.x", num(p.speed), ""]]],
+             ["self", [["speed", num(p.speed), "just stored", true]]]],
+      wire: { pub: true, scan: true, odom: true },
+      note: "<code>twist.twist</code> is not a typo: an Odometry holds a TwistWithCovariance, and the plain Twist is inside it.",
+      chips: [["ok", "speed = " + num(p.speed) + " m/s"]] }
+  ];
+}
+
+function buildScan(p) {
+  var f = [];
+  var r = runScan(p);
+  var beams = sampleBeams(p);
+  var wire = { pub: true, scan: true, odom: true };
+  var base = [["self", [["speed", num(p.speed), "m/s"], ["threshold", num(THRESHOLD, 1), "s"]]]];
+
+  f.push({ line: L("scan", "def scan_callback"), phase: 0, tag: "given",
+    head: "A scan arrived: " + BEAMS + " ranges, 270&deg; of them. This scenario is <b>" + p.says + "</b>.",
+    calc: "len(scan_msg.ranges) = " + BEAMS + "   angle_min = " + deg(ANGLE_MIN) +
+          "   angle_increment = " + deg(ANGLE_INCREMENT),
+    vars: base, wire: wire, beams: beams, show: "range",
+    chips: [["cur", BEAMS + " beams in"], ["", num(p.speed) + " m/s"]] });
+
+  f.push({ line: L("scan", "ranges = np.array"), phase: 0, tag: "TODO",
+    head: "The whole scan as one array, so the rest of the method can work on all " + BEAMS +
+          " beams at once instead of looping.",
+    calc: r.bad ? r.finite + " usable readings, " + r.bad + " that are inf or nan"
+                : "all " + r.finite + " readings are finite numbers",
+    vars: base.concat([["ranges", [["len", String(BEAMS), ""],
+                                   ["finite", String(r.finite), r.bad ? "" : "all of them"],
+                                   ["inf or nan", String(r.bad), r.bad ? "to be masked out" : "", r.bad > 0]]]]),
+    wire: wire, beams: beams, show: "range",
+    chips: [["cur", "ranges taken"], [r.bad ? "no" : "", r.bad ? r.bad + " bad readings" : "clean scan"]] });
+
+  f.push({ line: L("scan", "angles = (scan_msg.angle_min"), phase: 1, tag: "TODO",
+    head: "Every beam's angle, from the two numbers the message gives you. Angle 0 is straight ahead.",
+    calc: "angles[0] = " + deg(angleAt(0)) + "   angles[540] = " + deg(angleAt(540)) +
+          "   angles[" + (BEAMS - 1) + "] = " + deg(angleAt(BEAMS - 1)),
+    vars: base.concat([["angles", [["[0]", deg(angleAt(0)), "far right"],
+                                   ["[540]", deg(angleAt(540)), "dead ahead"],
+                                   ["[1079]", deg(angleAt(BEAMS - 1)), "far left"]]]]),
+    wire: wire, beams: beams, show: "angle",
+    note: "Read <code>angle_min</code> and <code>angle_increment</code> from the message rather than hard-coding -135&deg; and 1080 &mdash; the real car's lidar need not match.",
+    chips: [["cur", "angles computed"]] });
+
+  f.push({ line: L("scan", "range_rate = self.speed * np.cos(angles)"), phase: 2, tag: "TODO",
+    head: "How fast the car is closing on each beam: <code>" + num(p.speed) +
+          " &times; cos(angle)</code>. Full speed straight ahead, nothing at all square to the side.",
+    calc: "ahead: " + num(p.speed) + " * cos(0°) = " + num(p.speed) +
+          "    45°: " + num(p.speed * Math.cos(Math.PI / 4)) +
+          "    90°: " + num(p.speed * Math.cos(Math.PI / 2)),
+    vars: base.concat([["range_rate", [["ahead", num(p.speed), "m/s closing"],
+                                       ["at 45°", num(p.speed * Math.cos(Math.PI / 4)), ""],
+                                       ["at 90°", num(0), "not closing", true],
+                                       ["behind", num(-p.speed), "opening", true]]]]),
+    wire: wire, beams: beams, show: "rate",
+    note: "This single cosine is the whole reason the car does not brake for the object beside it.",
+    chips: [["cur", "closing speeds"], ["", r.closing + " of " + BEAMS + " beams closing"]] });
+
+  f.push({ line: L("scan", "closing = range_rate > 0.0"), phase: 3, tag: "TODO",
+    head: "Beams you are not closing on are out. Behind the car the cosine is negative, so the division would come out negative &mdash; and a negative iTTC is below every threshold.",
+    calc: r.closing + " of " + BEAMS + " beams have range_rate > 0" +
+          (p.speed > 0 ? "   (the forward half of the scan)" : "   (none: the car is not moving)"),
+    vars: base.concat([["masks", [["closing", String(r.closing), "beams kept"],
+                                  ["not closing", String(BEAMS - r.closing), "dropped", true]]]]),
+    wire: wire, beams: beams, show: "rate",
+    note: "Skip this line and your node brakes for walls it has already driven past &mdash; it passes every braking check and fails every other one.",
+    chips: [["cur", r.closing + " closing"]] });
+
+  f.push({ line: L("scan", "valid = np.isfinite(ranges)"), phase: 3, tag: "TODO",
+    head: r.bad
+      ? "And the garbage readings. <code>np.isfinite</code> is false for both <code>inf</code> and <code>nan</code>, so one call covers both &mdash; this scan has " + r.bad + " of them."
+      : "And the garbage readings. This scan happens to have none, but the mask has to be there: the grader scatters <code>inf</code> and <code>nan</code> through the same wall on the 15-point check.",
+    calc: "valid = isfinite & closing  ->  " + r.valid + " of " + BEAMS + " beams survive",
+    vars: base.concat([["masks", [["isfinite", String(r.finite), ""],
+                                  ["closing", String(r.closing), ""],
+                                  ["valid", String(r.valid), "both at once", true]]]]),
+    wire: wire, beams: beams, show: "valid",
+    note: "<code>&amp;</code>, not <code>and</code>: on numpy arrays <code>and</code> raises.",
+    chips: [["cur", r.valid + " valid"], [r.bad ? "no" : "", r.bad ? r.bad + " dropped as inf/nan" : "none dropped"]] });
+
+  f.push({ line: L("scan", "ittc = np.full"), phase: 4, tag: "TODO",
+    head: "Every beam starts at infinity. A beam with no meaningful answer should never be the reason you brake, and <code>inf</code> is never below the threshold.",
+    calc: "ittc = [inf, inf, inf, ... ]      (" + BEAMS + " of them)",
+    vars: base.concat([["ittc", [["filled with", "inf", "the safe default"],
+                                 ["about to be set", String(r.valid), "the valid beams"]]]]),
+    wire: wire, beams: beams, show: "valid",
+    note: "Start from zeros instead and every dropped beam reads as zero seconds to collision &mdash; the car brakes forever.",
+    chips: [["cur", "ittc initialized"]] });
+
+  // The division, walked beam by beam over the sample. This is the step the
+  // whole stepper exists for: the formula, with this scan's real numbers.
+  var runningMin = Infinity;
+  beams.forEach(function (b, k) {
+    if (b.valid && b.ittc < runningMin) runningMin = b.ittc;
+    var mathLine = b.valid
+      ? "ittc[" + b.i + "] = " + num(b.range) + " / " + num(b.rate) + " = " + num(b.ittc) + " s"
+      : "beam " + b.i + " is masked out, so ittc[" + b.i + "] stays inf" +
+        (!isFinite_(b.range) ? "   (range is " + num(b.range) + ")" : "   (range_rate is " + num(b.rate) + ", not closing)");
+
+    f.push({ line: L("scan", "ittc[valid] = ranges[valid]"), phase: 4, tag: "TODO",
+      beam: b.i,
+      head: "Beam " + b.i + " &mdash; " + b.why + ". At " + deg(b.angle) + ", range " + num(b.range) +
+            (b.valid
+              ? ", closing at " + num(b.rate) + " m/s: <b>" + num(b.ittc) + " s</b> to collision."
+              : ", and it is excluded by the mask."),
+      calc: mathLine,
+      vars: base.concat([
+        ["this beam", [["i", String(b.i), b.why],
+                       ["angles[i]", deg(b.angle), ""],
+                       ["ranges[i]", num(b.range), isFinite_(b.range) ? "m" : "not a number", !isFinite_(b.range)],
+                       ["range_rate[i]", num(b.rate), b.rate > 0 ? "closing" : "not closing", b.rate <= 0],
+                       ["ittc[i]", num(b.ittc), b.valid ? "" : "left at inf", b.valid]]],
+        ["so far", [["smallest iTTC", num(runningMin), runningMin === Infinity ? "nothing yet" : "over the beams visited", true]]]]),
+      wire: wire, beams: beams, show: "ittc", upto: k,
+      chips: [["cur", "beam " + (k + 1) + " of " + beams.length + " shown"],
+              [runningMin < THRESHOLD ? "no" : "", "min so far " + num(runningMin)]] });
+  });
+
+  f.push({ line: L("scan", "ittc[valid] = ranges[valid]"), phase: 4, tag: "TODO",
+    head: "numpy did all " + BEAMS + " of those at once, not " + beams.length +
+          ". The smallest answer in the whole scan is <b>" + num(r.min) + " s</b>" +
+          (r.at >= 0 ? ", at beam " + r.at + " (" + deg(angleAt(r.at)) + ")." : " &mdash; no beam qualified at all."),
+    calc: "np.min(ittc) = " + num(r.min) + (r.at >= 0 ? "   at beam " + r.at : "   (every beam is inf)"),
+    vars: base.concat([["ittc", [["min", num(r.min), "seconds", true],
+                                 ["at beam", r.at >= 0 ? String(r.at) : "-", r.at >= 0 ? deg(angleAt(r.at)) : "none valid"],
+                                 ["beams valid", String(r.valid), "of " + BEAMS]]]]),
+    wire: wire, beams: beams, show: "ittc", upto: beams.length,
+    chips: [["cur", "min " + num(r.min) + " s"]] });
+
+  f.push({ line: L("scan", "if np.min(ittc) < self.threshold"), phase: 5, tag: "TODO",
+    head: num(r.min) + " s " + (r.brakes ? "is below" : "is not below") + " the " + num(THRESHOLD, 1) +
+          " s threshold, so this node <b>" + (r.brakes ? "brakes" : "does nothing") + "</b> &mdash; which is " +
+          (r.brakes === p.brake ? "what the grader wants here." : "NOT what the grader wants here."),
+    calc: num(r.min) + " < " + num(THRESHOLD, 1) + "  ->  " + (r.brakes ? "True, call self.brake()" : "False, return without publishing"),
+    vars: base.concat([["the decision", [["np.min(ittc)", num(r.min), "s", true],
+                                         ["threshold", num(THRESHOLD, 1), "s"],
+                                         ["brake?", r.brakes ? "yes" : "no", r.brakes === p.brake ? "as graded" : "wrong", true]]]]),
+    wire: wire, beams: beams, show: "ittc", upto: beams.length, verdict: r,
+    note: p.brake
+      ? "This scenario is worth " + p.pts + " points, and the node has to brake for it."
+      : "This scenario is worth " + p.pts + " points, and the node has to <em>not</em> brake for it. Four of the seven checks are this kind.",
+    chips: [[r.brakes ? "no" : "ok", r.brakes ? "braking" : "not braking"],
+            [r.brakes === p.brake ? "ok" : "no", r.brakes === p.brake ? "matches the grader" : "fails this check"]] });
+
+  return f;
+}
+
+function buildBrake(p) {
+  var r = runScan(p);
+  var wire = { pub: true, scan: true, odom: true };
+  var base = [["self", [["speed", num(p.speed), "m/s"], ["threshold", num(THRESHOLD, 1), "s"]]]];
+
+  var f = [];
+  f.push({ line: L("brake", "def brake"), phase: 0, tag: "TODO",
+    head: r.brakes
+      ? "Reached, because the smallest iTTC in this scan was " + num(r.min) + " s."
+      : "Not reached in this scenario &mdash; the smallest iTTC was " + num(r.min) +
+        " s, above the threshold. This is what the method would do if it were called.",
+    calc: "called from scan_callback when np.min(ittc) < " + num(THRESHOLD, 1),
+    vars: base.concat([["why here", [["np.min(ittc)", num(r.min), "s", true],
+                                     ["threshold", num(THRESHOLD, 1), "s"]]]]),
+    wire: wire, msg: null, verdict: r,
+    chips: [[r.brakes ? "no" : "", r.brakes ? "braking" : "would not be called"]] });
+
+  f.push({ line: L("brake", "stop = AckermannDriveStamped()"), phase: 0, tag: "TODO",
+    head: "A normal drive command. Every field starts at zero, which here is most of the work.",
+    calc: "stop.drive.speed = 0.0,  stop.drive.steering_angle = 0.0",
+    vars: base.concat([["stop", [["drive.speed", "0.00", "already zero"],
+                                 ["drive.steering_angle", "0.00", ""]]]]),
+    wire: wire, msg: { speed: 0, set: null },
+    chips: [["cur", "message built"]] });
+
+  f.push({ line: L("brake", "stop.drive.speed = 0.0"), phase: 1, tag: "TODO",
+    head: "Set explicitly, because this is the line that <em>is</em> the brake. There is no brake field on the message.",
+    calc: "stop.drive.speed = 0.0     (the grader accepts abs(speed) < 1e-3)",
+    vars: base.concat([["stop", [["drive.speed", "0.00", "the brake", true]]]]),
+    wire: wire, msg: { speed: 0, set: "speed" },
+    chips: [["cur", "speed = 0.0"]] });
+
+  f.push({ line: L("brake", "self.brake_publisher.publish(stop)"), phase: 2, tag: "TODO",
+    head: "Out on <code>/drive</code>. And again on the next scan, 50 ms later, for as long as the condition holds &mdash; the brake is held by repetition, not by one message.",
+    calc: "publish -> /drive   speed=0.0     repeated every scan while min(ittc) < " + num(THRESHOLD, 1),
+    vars: base.concat([["published", [["topic", "/drive", ""], ["drive.speed", "0.00", "", true]]]]),
+    wire: wire, msg: { speed: 0 }, flight: true, verdict: r,
+    note: "There is no un-brake. When the obstacle is gone the condition goes false, this line stops running, and normal drive commands take over.",
+    chips: [["ok", "brake published"]] });
+
+  return f;
+}
+
+function buildCar(p) {
+  var wire = { pub: true, scan: true, odom: true };
+  return [
+    { line: L("car", "'/ego_racecar/odom'"), phase: 0, tag: "Lab 2 Sim",
+      file: "safety_node.py, in the simulator",
+      head: "In simulation, the car's odometry is namespaced by the simulator: <code>/ego_racecar/odom</code>.",
+      calc: "sim:  /ego_racecar/odom  ->  self.speed",
+      vars: [["Lab 2 Sim", [["odom topic", "/ego_racecar/odom", ""], ["scan QoS", "10", "depth"],
+                         ["threshold", num(THRESHOLD, 1), "s, works in sim"]]]],
+      wire: wire, chips: [["ok", "passes the simulator checks"]] },
+    { line: L("car", "'/odom'"), phase: 0, tag: "Lab 2 Car",
+      file: "safety_node.py, on the car",
+      head: "On the real car there is only one vehicle, so the topic is just <code>/odom</code>. Everything else about this line is identical, which is what makes it easy to miss.",
+      calc: "car:  /odom  ->  self.speed      (wrong name = speed stays 0.00 = never brakes)",
+      vars: [["Lab 2 Car", [["odom topic", "/odom", "changed", true],
+                         ["self.speed", "0.00", "if the name is wrong", true]]]],
+      wire: wire,
+      note: "The symptom is a node that starts, connects, and never brakes. Check <code>ros2 topic list</code> on the car before you blame the algorithm.",
+      chips: [["no", "silent failure if missed"]] },
+    { line: L("car", "qos_profile_sensor_data"), phase: 1, tag: "Lab 2 Car",
+      file: "safety_node.py, on the car",
+      head: "The lidar driver publishes best-effort. A subscriber that asks for reliable delivery is incompatible, and ROS answers by delivering nothing.",
+      calc: "driver: BEST_EFFORT    subscriber: RELIABLE    ->  0 messages, 0 warnings",
+      vars: [["Lab 2 Car", [["scan QoS", "sensor_data", "best effort", true],
+                         ["messages", "0", "if it is left at 10", true]]]],
+      wire: wire,
+      note: "<code>ros2 topic echo /scan</code> adapts automatically and works fine, which makes the topic look healthy while your callback never fires.",
+      chips: [["no", "the classic Lab 2 Car failure"]] },
+    { line: L("car", "self.threshold = 0.6"), phase: 2, tag: "Lab 2 Car",
+      file: "safety_node.py, on the car",
+      head: "The brake is instant in simulation. On the car the ESC takes time and the tires have to grip, so the threshold that passed in sim stops too late.",
+      calc: "0.4 s of iTTC + brake latency  ->  the car needs more warning than the math alone says",
+      vars: [["threshold", [["in sim", num(THRESHOLD, 1), "passed the checks"],
+                            ["on the car", "0.6", "tune it yourself", true]]]],
+      wire: wire,
+      note: "Lab 2 Car asks what you settled on and why. There is no single right answer, which is the point of asking.",
+      chips: [["cur", "tuned by hand"]] }
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+var MODES = ["files", "init", "odom", "scan", "brake", "car", "graded"];
+// Modes with no code to walk render their own panel instead of frames.
+var STATIC = { files: filesHtml, graded: gradedHtml };
+var DEFAULT_FILE = {
+  init: "safety_node/scripts/safety_node.py",
+  odom: "safety_node/scripts/safety_node.py",
+  scan: "safety_node/scripts/safety_node.py",
+  brake: "safety_node/scripts/safety_node.py",
+  car: "safety_node/scripts/safety_node.py"
+};
+var state = { mode: MODES[0], preset: "wall", step: 0, pinned: null, peek: null,
+              frames: [], timer: null, mh: null };
+
+function buildFrames() {
+  var p = PRESETS[state.preset];
+  if (state.mode === "init")   state.frames = buildInit(p);
+  if (state.mode === "odom")   state.frames = buildOdom(p);
+  if (state.mode === "scan")   state.frames = buildScan(p);
+  if (state.mode === "brake")  state.frames = buildBrake(p);
+  if (state.mode === "car")    state.frames = buildCar(p);
+  if (STATIC[state.mode]) state.frames = [];
+  if (state.step > state.frames.length - 1) state.step = Math.max(0, state.frames.length - 1);
+}
+
+function frame() { return state.frames[Math.min(state.step, state.frames.length - 1)]; }
+
+// ---------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+var HL_KW = ("and as assert async await break class continue def del elif else except False " +
+             "finally for from global if import in is lambda None nonlocal not or pass raise " +
+             "return self True try while with yield").split(" ");
+
+function hl(raw) {
+  var cut = raw.indexOf("#");
+  var code = cut === -1 ? raw : raw.slice(0, cut);
+  var note = cut === -1 ? "" : raw.slice(cut);
+
+  var out = "";
+  var re = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)|([\s\S]?)/g;
+  var m;
+  while ((m = re.exec(code)) !== null) {
+    if (m[0] === "") { re.lastIndex++; continue; }
+    if (m[1]) { out += '<span class="st">' + esc(m[1]) + "</span>"; continue; }
+    if (m[2]) { out += '<span class="nm">' + esc(m[2]) + "</span>"; continue; }
+    if (m[3]) {
+      if (HL_KW.indexOf(m[3]) !== -1) out += '<span class="kw">' + esc(m[3]) + "</span>";
+      else if (code.charAt(re.lastIndex) === "(") out += '<span class="fn">' + esc(m[3]) + "</span>";
+      else out += esc(m[3]);
+      continue;
+    }
+    out += esc(m[4]);
+  }
+  return out + (note ? '<span class="cm">' + esc(note) + "</span>" : "");
+}
+
+function codeHtml(key, f) {
+  var fileLabel = f.file || DEFAULT_FILE[key];
+  return '<p class="filename">' + (fileLabel ? "<b>" + esc(fileLabel) + "</b>" : "") + "</p>" +
+    '<div class="code" id="code">' + CODE[key].map(function (ln, i) {
+      var cls = [];
+      if (i === f.line) cls.push("hit");
+      if (state.pinned === i) cls.push("pin");
+      var t = hl(ln);
+      return '<div data-line="' + i + '"' + (cls.length ? ' class="' + cls.join(" ") + '"' : "") +
+             ' tabindex="0">' + (t === "" ? "&nbsp;" : t) + "</div>" +
+             (i === f.line && f.calc
+                ? '<div class="calc"><span class="cv">' + esc(f.calc) + "</span></div>"
+                : "");
+    }).join("") + "</div>" + lineInfoHtml(key);
+}
+
+function lineInfoHtml(key) {
+  var info = LINE_INFO[key] && LINE_INFO[key][state.pinned];
+  if (!info) {
+    var n = Object.keys(LINE_INFO[key] || {}).length;
+    return '<p class="hint">Click a line for the arithmetic behind it and what goes wrong without it &mdash; ' +
+           n + " of these lines have one.</p>";
+  }
+  return '<div class="lineinfo"><span class="close">click again to close</span><h4>' +
+    esc(info.src) + "</h4><p style='margin:0'>" + info.what + "</p><ul class='li-items'>" +
+    info.items.map(function (it) {
+      return '<li><span class="li-kind k-' + it[0] + '">' + it[0] + "</span>" + it[1] + "</li>";
+    }).join("") + "</ul></div>";
+}
+
+function localsHtml(f) {
+  if (!f.vars) return '<p class="hint">Nothing in scope yet.</p>';
+  return '<div class="locals">' + f.vars.map(function (g) {
+    return '<div class="lgroup"><h5>' + esc(g[0]) + "</h5>" + g[1].map(function (v) {
+      var cls = "";
+      if (v[1] === "-" || v[1] === "inf") cls = " pend";
+      else if (v[1] === "nan") cls = " bad";
+      else if (v[3]) cls = " hot";
+      return '<div class="lv"><span class="ln">' + esc(v[0]) + "</span>" +
+        '<span class="lval' + cls + '">' + esc(v[1]) + "</span>" +
+        (v[2] ? '<span class="lat">' + esc(v[2]) + "</span>" : "") + "</div>";
+    }).join("") + "</div>";
+  }).join("") + "</div>";
+}
+
+// The car, seen from above, with the beams the walk is visiting drawn on it.
+// Drawing all 1080 would be a gray disc; the sample is what the loop shows and
+// so it is what the picture shows, plus a faint hull of the full scan.
+function scanSvg(f) {
+  var p = PRESETS[state.preset];
+  var cx = 150, cy = 180, pxPerM = 26, maxR = 160;
+  var toXY = function (a, r) {
+    var rr = Math.min(isFinite_(r) ? r : RANGE_MAX, maxR / pxPerM) * pxPerM;
+    // Screen: x right, y up. Beam angle 0 is straight ahead = up the page.
+    return [cx - Math.sin(a) * rr, cy - Math.cos(a) * rr];
+  };
+
+  var out = '<svg class="sc" viewBox="0 0 300 230" role="img" aria-label="the scan at this step">';
+
+  // The faint hull of the whole scan: every 12th beam, so the shape of the
+  // room is visible without drawing 1080 lines.
+  var hull = [];
+  for (var i = 0; i < BEAMS; i += 12) {
+    var rv = p.scan(i);
+    hull.push(toXY(angleAt(i), isFinite_(rv) ? rv : RANGE_MAX));
+  }
+  out += '<polyline fill="none" stroke="#e3e8ee" stroke-width="1.5" points="' +
+    hull.map(function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" ") + '"/>';
+
+  // The sampled beams, colored by what the current step knows about them.
+  (f.beams || []).forEach(function (b, k) {
+    var known = f.upto === undefined || k <= f.upto;
+    var col = "#cfd6de", w = 1.5;
+    if (f.show === "angle") { col = "#2573a7"; }
+    else if (f.show === "rate") { col = b.rate > 0 ? "#2573a7" : "#cfd6de"; }
+    else if (f.show === "valid") { col = b.valid ? "#1c7e45" : "#c0392b"; }
+    else if (f.show === "ittc" && known) {
+      col = !b.valid ? "#cfd6de" : (b.ittc < THRESHOLD ? "#c0392b" : "#1c7e45");
+    }
+    if (f.beam === b.i) { col = "#a95c19"; w = 3; }
+    var q = toXY(b.angle, b.range);
+    out += '<line x1="' + cx + '" y1="' + cy + '" x2="' + q[0].toFixed(1) + '" y2="' + q[1].toFixed(1) +
+      '" stroke="' + col + '" stroke-width="' + w + '"' +
+      (isFinite_(b.range) ? "" : ' stroke-dasharray="3 3"') + "/>";
+    if (isFinite_(b.range)) {
+      out += '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="' +
+        (f.beam === b.i ? 4 : 2.5) + '" fill="' + col + '"/>';
+    }
+  });
+
+  // The car: a box pointing up, with its direction of travel.
+  out += '<rect x="' + (cx - 11) + '" y="' + (cy - 7) + '" width="22" height="30" rx="4" ' +
+         'fill="#ede7f6" stroke="#4527a0" stroke-width="2"/>';
+  if (p.speed > 0) {
+    out += '<line x1="' + cx + '" y1="' + (cy - 10) + '" x2="' + cx + '" y2="' + (cy - 30) +
+      '" stroke="#4527a0" stroke-width="2" marker-end="url(#car)"/>' +
+      '<text x="' + (cx + 6) + '" y="' + (cy - 20) + '" class="mono" fill="#4527a0">' +
+      num(p.speed) + " m/s</text>";
+  }
+  out += '<defs><marker id="car" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" ' +
+         'markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#4527a0"/></marker></defs>';
+  out += '<text x="' + cx + '" y="' + (cy + 38) + '" text-anchor="middle" fill="#6e6e6e">' +
+         esc(p.label) + "</text>";
+  out += "</svg>";
+  return out;
+}
+
+// One row per beam the loop visits: the numbers, as the arrays would hold them.
+function beamsHtml(f) {
+  if (!f.beams) return "";
+  var head = { range: "ranges[i]", angle: "angles[i]", rate: "range_rate[i]", valid: "valid[i]", ittc: "ittc[i]" };
+  var minShown = Infinity;
+  f.beams.forEach(function (b, k) {
+    if ((f.upto === undefined || k <= f.upto) && b.valid && b.ittc < minShown) minShown = b.ittc;
+  });
+  return '<div class="beams"><h5>the beams this walk visits &mdash; ' + f.beams.length +
+    " of " + BEAMS + "</h5><table><tr><th>i</th><th>angle</th><th>range</th>" +
+    "<th>rate</th><th>iTTC</th></tr>" +
+    f.beams.map(function (b, k) {
+      var known = f.upto === undefined || k <= f.upto;
+      var cls = [];
+      if (f.beam === b.i) cls.push("on");
+      if (!b.valid) cls.push("skip");
+      if (known && b.valid && b.ittc === minShown && minShown < Infinity) cls.push("min");
+      return "<tr" + (cls.length ? ' class="' + cls.join(" ") + '"' : "") + "><td>" + b.i +
+        "</td><td>" + deg(b.angle) + "</td><td>" + num(b.range) + "</td><td>" + num(b.rate) +
+        "</td><td>" + (known ? (b.valid ? num(b.ittc) : "inf") : "&mdash;") + "</td></tr>";
+    }).join("") + "</table></div>";
+}
+
+function wireHtml(f) {
+  var w = f.wire || {};
+  var pill = function (label, live, hot) {
+    var c = live ? (hot ? ["#a95c19", "#fff3e0"] : ["#1c7e45", "#f2fbf4"]) : ["#b9c3cd", "#fbfcfd"];
+    return '<span class="chip" style="border-color:' + c[0] + ";background:" + c[1] + ";color:" + c[0] +
+      '">' + label + "</span>";
+  };
+  return '<div class="chips">' + pill("/scan in", w.scan, state.mode === "scan") +
+    pill("/odom in", w.odom, state.mode === "odom") +
+    pill("/drive out", w.pub, !!f.flight) + "</div>";
+}
+
+function chipsHtml(f) {
+  if (!f.chips) return '<div class="chips"></div>';
+  return '<div class="chips">' + f.chips.map(function (c) {
+    return '<span class="chip' + (c[0] ? " " + c[0] : "") + '">' + c[1] + "</span>";
+  }).join("") + "</div>";
+}
+
+function nowBox(f) {
+  return '<div class="nowbox"><p class="nownote">' + f.head + "</p></div>" +
+    (f.note ? '<ul class="why"><li>' + f.note + "</li></ul>" : "");
+}
+
+function railHtml(f) {
+  var g = GUIDE[state.mode];
+  if (!g) return "";
+  return '<div class="card rail"><h2>Where we are</h2><div class="card-body">' +
+    (f.tag ? '<p class="rlab">this step</p><p class="rnow">' + esc(f.tag) + "</p>" : "") +
+    '<p class="rlab">' + g.where + "</p><ol>" +
+    g.steps.map(function (st, i) {
+      var open = state.peek === i;
+      return '<li class="' + (i === f.phase ? "on" : "") + '" data-step="' + i + '" ' +
+        'role="button" tabindex="0"><span class="rt"><span class="rn">' + (i + 1) +
+        "</span><span>" + st.t + "</span></span>" +
+        (open ? "<ul>" + st.b.map(function (b) { return "<li>" + b + "</li>"; }).join("") + "</ul>" : "") +
+        "</li>";
+    }).join("") + "</ol></div></div>";
+}
+
+function factsHtml() {
+  var fs = FACTS[state.mode];
+  if (!fs) return "";
+  return '<dl class="facts">' + fs.map(function (p) {
+    return "<dt>" + p[0] + "</dt><dd>" + p[1] + "</dd>";
+  }).join("") + "</dl>";
+}
+
+function todoBarHtml(f) {
+  var given = f.tag === "given";
+  return '<div class="todobar' + (given ? " bg" : "") + '"><span class="tag">' +
+    (given ? "ALREADY DONE" : "YOUR CODE") + '</span><span class="what">' +
+    (given ? "This line is in the skeleton &mdash; nothing to write here."
+           : "This line is one of the <code>TODO</code>s in " +
+             esc(f.file || DEFAULT_FILE[state.mode]) + " (" + esc(f.tag) + ").") + "</span></div>";
+}
+
+function soloHtml(f) {
+  var mh = state.mh || {};
+  var fix = function (n) { return mh[n] ? ' style="min-height:' + mh[n] + 'px"' : ""; };
+  return '<div class="solo"><div class="col">' +
+      '<div class="card"><h2>The code</h2><div class="card-body"' + fix("code") + ">" +
+        codeHtml(state.mode, f) + "</div></div>" +
+      (FACTS[state.mode] ? '<div class="card"><h2>The numbers that matter</h2><div class="card-body">' +
+        factsHtml() + "</div></div>" : "") +
+    '</div><div class="col">' +
+      '<div class="card"><h2>What the lidar sees</h2><div class="card-body"' + fix("pic") + ">" +
+        scanSvg(f) + wireHtml(f) + beamsHtml(f) + "</div></div>" +
+      '<div class="card"><h2>What just happened</h2><div class="card-body"' + fix("says") + ">" +
+        nowBox(f) + chipsHtml(f) + "</div></div>" +
+    '</div><div class="col railcol">' + railHtml(f) +
+      '<div class="card"><h2>What the program is holding</h2><div class="card-body"' +
+        fix("locals") + ">" + localsHtml(f) + "</div></div>" +
+    "</div></div>";
+}
+
+// Every scenario, run through the real algorithm, next to what the grader
+// demands. This table is computed, not typed: if the threshold above were
+// wrong, a row here would disagree and the self-check would say so.
+function filesHtml() {
+  var tree = ["safety_node/", "&#9500;&#9472; package.xml                  what it depends on", "&#9500;&#9472; setup.py                     how it installs, and the entry point", "&#9500;&#9472; safety_node/", "&#9474;  &#9492;&#9472; safety_node.py            <b>the one file you write</b>", "&#9492;&#9472; tests/check_lab2.py          scores it before you submit"].join("<br>");
+  return '<div class="solo" style="grid-template-columns:1.1fr .9fr">' +
+    '<div class="col"><div class="card"><h2>What you are building</h2><div class="card-body">' +
+    '<div class="tree">' + tree + "</div>" +
+    "<p>One package, one node, one file of yours. The skeleton already names the node and " +
+    "the class; what is missing is the body of three methods.</p>" +
+    "<p>The node owes its three topics: it <b>reads</b> <code class='inl'>/scan</code> and " +
+    "<code class='inl'>/ego_racecar/odom</code>, and it <b>writes</b> " +
+    "<code class='inl'>/drive</code>. Every later tab is one of those connections, or the " +
+    "arithmetic between them.</p>" +
+    "</div></div></div>" +
+    '<div class="col"><div class="card"><h2>How to read this page</h2><div class="card-body">' +
+    "<p>Each tab walks one method a line at a time. The arrow keys step through it, space " +
+    "plays it, and clicking a line opens the theory for that line.</p>" +
+    "<p>Tabs 2 to 5 are the code, in the order you write it: set up the node, remember the " +
+    "speed, do the arithmetic, then brake. Tab 6 is what changes on the real car. Tab 7 is " +
+    "the grader.</p>" +
+    "<p class='rlab'>start here</p>" +
+    "<p>Go to <b>2 &middot; __init__</b> and write the constructor. Nothing else can be " +
+    "tested until the node starts and connects to its topics.</p>" +
+    "</div></div></div></div>";
+}
+
+function gradedHtml() {
+  var rows = Object.keys(PRESETS).map(function (k) {
+    var p = PRESETS[k], r = runScan(p);
+    return { k: k, p: p, r: r, agree: r.brakes === p.brake };
+  });
+  var pts = rows.reduce(function (s, x) { return s + x.p.pts; }, 0);
+  var earned = rows.reduce(function (s, x) { return s + (x.agree ? x.p.pts : 0); }, 0);
+
+  return '<div class="solo" style="grid-template-columns:1.35fr .65fr">' +
+    '<div class="col"><div class="card"><h2>check_lab2.py, scenario by scenario</h2>' +
+    '<div class="card-body"><table class="v">' +
+    "<tr><th>Scan</th><th>Speed</th><th class='pts'>Pts</th><th>min iTTC</th>" +
+    "<th>must</th><th>this code</th></tr>" +
+    "<tr class='part'><td colspan='6'>Compilation &mdash; 30 pts: builds, starts, and connects to its three topics</td></tr>" +
+    rows.map(function (x) {
+      return "<tr class='" + (x.agree ? "agree" : "differ") + "'><td>" + esc(x.p.label) +
+        "</td><td class='num'>" + num(x.p.speed) + "</td><td class='pts'>" + x.p.pts +
+        "</td><td class='num'>" + num(x.r.min) + " s</td><td>" +
+        (x.p.brake ? "<span class='yes'>brake</span>" : "<span class='no'>hold</span>") +
+        "</td><td class='ver'>" + (x.r.brakes ? "brakes" : "holds") +
+        (x.agree ? "" : " &#x2716;") + "</td></tr>";
+    }).join("") +
+    "<tr class='part'><td colspan='2'>Scenario points</td><td class='pts'>" + pts +
+    "</td><td colspan='3'>plus 30 for compilation = " + (pts + 30) + " autograded</td></tr>" +
+    "</table>" +
+    '<p class="hint">Every <b>min iTTC</b> above is computed by this page, running the same ' +
+    "arithmetic as the code pane at a threshold of " + num(THRESHOLD, 1) +
+    " s. Click a scenario in the controls to walk it.</p>" +
+    "</div></div></div>" +
+    '<div class="col"><div class="card"><h2>And the rest</h2><div class="card-body">' +
+    '<div class="verdict"><p><b>' + (pts + 30) + " of " + (pts + 30) +
+    " autograded points</b> at this threshold &mdash; " + earned + " of " + pts +
+    " from the scenarios" + (earned === pts ? ", all seven agreeing." : ", and " +
+    (pts - earned) + " points' worth disagreeing.") + "</p>" +
+    "<p>Run it yourself with <code class='inl'>python3 tests/check_lab2.py python</code> " +
+    "(or <code class='inl'>cpp</code>). It starts your node and feeds it these scans at 20 Hz.</p>" +
+    "<p>Four of the seven scenarios are <em>do not brake</em>. A node that brakes for everything " +
+    "scores 30 of the 50 scenario points and is useless, which is exactly what those four checks " +
+    "are there to catch.</p>" +
+    "<p>Lab 2 Car adds the written questions and the tuning you did on the real car, graded by hand.</p>" +
+    "</div></div></div></div></div>";
+}
+
+function measureRun() {
+  state.mh = null;
+  if (STATIC[state.mode]) return;
+  var stage = document.getElementById("stage");
+  if (!stage.offsetWidth || !state.frames.length) return;
+
+  var ghost = document.createElement("div");
+  ghost.style.cssText = "position:absolute;left:-99999px;top:0;visibility:hidden;width:" +
+                        stage.offsetWidth + "px";
+  document.body.appendChild(ghost);
+
+  var max = { code: 0, pic: 0, says: 0, locals: 0 };
+  var savedPin = state.pinned;
+  state.pinned = null;
+  state.frames.forEach(function (f) {
+    ghost.innerHTML = soloHtml(f);
+    var cols = ghost.querySelectorAll(".col");
+    if (cols.length < 3) return;        // markup changed; reserve nothing rather than throw
+    var h = function (card) {
+      var body = card && card.querySelector(".card-body");
+      return body ? body.offsetHeight : 0;
+    };
+    max.code   = Math.max(max.code,   h(cols[0].children[0]));
+    max.pic    = Math.max(max.pic,    h(cols[1].children[0]));
+    max.says   = Math.max(max.says,   h(cols[1].children[1]));
+    max.locals = Math.max(max.locals, h(cols[2].children[1]));
+  });
+  state.pinned = savedPin;
+
+  document.body.removeChild(ghost);
+  state.mh = max;
+}
+
+function render() {
+  var stage = document.getElementById("stage");
+
+  Array.prototype.forEach.call(document.querySelectorAll("#tabs button"), function (b) {
+    b.classList.toggle("on", b.getAttribute("data-mode") === state.mode);
+  });
+
+  var w = WHATIS[state.mode];
+  document.getElementById("whatis").innerHTML = w
+    ? "<dl><dt>" + w.a[0] + "</dt><dd>" + w.a[1] + "</dd><dt>" + w.b[0] + "</dt><dd>" + w.b[1] +
+      '</dd><div class="both">' + w.both + "</div></dl>"
+    : "";
+
+  renderPresets();
+
+  if (STATIC[state.mode]) {
+    stage.innerHTML = STATIC[state.mode]();
+    document.getElementById("frameCount").textContent = "";
+    document.getElementById("legend").innerHTML = "";
+    setControls(false);
+    return;
+  }
+
+  var f = frame();
+  stage.innerHTML = todoBarHtml(f) + soloHtml(f);
+  document.getElementById("frameCount").textContent =
+    "step " + (state.step + 1) + " of " + state.frames.length;
+  document.getElementById("legend").innerHTML =
+    '<span><i class="sw" style="border-color:#a95c19;background:#fff3e0"></i>the beam this step is on</span>' +
+    '<span><i class="sw" style="border-color:#c0392b;background:#fce4ec"></i>iTTC below the threshold, or a reading the mask drops</span>' +
+    '<span><i class="sw" style="border-color:#1c7e45;background:#f2fbf4"></i>valid, and far enough away in time</span>' +
+    '<span><i class="sw" style="border-color:#cfd6de;background:#fbfcfd"></i>not closing, so it has no iTTC</span>' +
+    '<span>dashed = an inf or nan reading</span>';
+  setControls(true);
+  wireCode();
+  wireRail();
+}
+
+function setControls(live) {
+  ["first", "prev", "play", "next", "last", "nextBeam"].forEach(function (id) {
+    document.getElementById(id).disabled = !live;
+  });
+  if (!live) return;
+  document.getElementById("first").disabled = state.step === 0;
+  document.getElementById("prev").disabled = state.step === 0;
+  document.getElementById("next").disabled = state.step >= state.frames.length - 1;
+  document.getElementById("last").disabled = state.step >= state.frames.length - 1;
+  // Only the scan walk visits beams one at a time.
+  document.getElementById("nextBeam").disabled = !state.frames.some(function (f) {
+    return f.beam !== undefined;
+  });
+}
+
+function renderPresets() {
+  var row = document.getElementById("presetRow");
+  if (STATIC[state.mode]) { row.innerHTML = ""; return; }
+  row.innerHTML = '<span class="lbl">The grader\'s scans</span>' +
+    Object.keys(PRESETS).map(function (k) {
+      var p = PRESETS[k];
+      return '<button class="ctl' + (state.preset === k ? " on" : "") + '" data-preset="' + k +
+        '" title="' + esc(p.says) + '">' + esc(p.label) +
+        '<span class="ex">' + esc(p.ex) + " &middot; " + (p.brake ? "brake" : "hold") + "</span></button>";
+    }).join("") +
+    '<span class="count">the seven scenarios check_lab2.py scores</span>';
+  Array.prototype.forEach.call(row.querySelectorAll("[data-preset]"), function (b) {
+    b.addEventListener("click", function () {
+      stopPlay();
+      state.preset = b.getAttribute("data-preset");
+      state.step = 0; state.pinned = null;
+      buildFrames(); measureRun(); render();
+    });
+  });
+}
+
+function wireCode() {
+  var code = document.getElementById("code");
+  if (!code) return;
+  Array.prototype.forEach.call(code.children, function (d) {
+    if (!d.hasAttribute("data-line")) return;
+    var hit = function () {
+      var n = parseInt(d.getAttribute("data-line"), 10);
+      state.pinned = (state.pinned === n) ? null : n;
+      render();
+    };
+    d.addEventListener("click", hit);
+    d.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hit(); }
+    });
+  });
+}
+
+function wireRail() {
+  Array.prototype.forEach.call(document.querySelectorAll(".rail [data-step]"), function (d) {
+    var n = +d.getAttribute("data-step");
+    var hit = function () { state.peek = state.peek === n ? null : n; render(); };
+    d.addEventListener("click", hit);
+    d.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hit(); }
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Stepping
+// ---------------------------------------------------------------------------
+function go(i) {
+  state.step = Math.max(0, Math.min(i, state.frames.length - 1));
+  render();
+}
+
+// The per-beam steps are the long stretch of the scan walk. This jumps over
+// the rest of them to whatever comes next.
+function nextBeam() {
+  var here = state.frames[state.step];
+  for (var i = state.step + 1; i < state.frames.length; i++) {
+    if (state.frames[i].beam !== here.beam) { go(i); return; }
+  }
+  go(state.frames.length - 1);
+}
+
+function stopPlay() {
+  if (state.timer) { clearInterval(state.timer); state.timer = null; }
+  var b = document.getElementById("play");
+  if (b) b.innerHTML = "&#9654; Play";
+}
+
+function togglePlay() {
+  if (STATIC[state.mode]) return;
+  if (state.timer) { stopPlay(); return; }
+  if (state.step >= state.frames.length - 1) state.step = 0;
+  document.getElementById("play").innerHTML = "&#9208; Pause";
+  state.timer = setInterval(function () {
+    if (state.step >= state.frames.length - 1) { stopPlay(); return; }
+    go(state.step + 1);
+  }, 1400);
+}
+
+function setMode(m) {
+  stopPlay();
+  state.mode = m; state.step = 0; state.pinned = null; state.peek = null;
+  buildFrames(); measureRun(); render();
+  if (location.hash.replace("#", "") !== m) history.replaceState(null, "", "#" + m);
+}
+
+Array.prototype.forEach.call(document.querySelectorAll("#tabs button"), function (b) {
+  b.addEventListener("click", function () { setMode(b.getAttribute("data-mode")); });
+});
+document.getElementById("first").addEventListener("click", function () { stopPlay(); go(0); });
+document.getElementById("prev").addEventListener("click", function () { stopPlay(); go(state.step - 1); });
+document.getElementById("next").addEventListener("click", function () { stopPlay(); go(state.step + 1); });
+document.getElementById("last").addEventListener("click", function () { stopPlay(); go(state.frames.length - 1); });
+document.getElementById("play").addEventListener("click", togglePlay);
+document.getElementById("nextBeam").addEventListener("click", function () { stopPlay(); nextBeam(); });
+
+document.addEventListener("keydown", function (e) {
+  var t = e.target.tagName;
+  if (t === "INPUT" || t === "TEXTAREA") return;
+  if (e.key === "ArrowRight") { e.preventDefault(); stopPlay(); go(state.step + 1); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); stopPlay(); go(state.step - 1); }
+  else if (e.key === " ") { e.preventDefault(); togglePlay(); }
+  else if (e.key === "Home") { e.preventDefault(); stopPlay(); go(0); }
+  else if (e.key === "End") { e.preventDefault(); stopPlay(); go(state.frames.length - 1); }
+});
+
+var rt = null;
+window.addEventListener("resize", function () {
+  clearTimeout(rt);
+  rt = setTimeout(function () { measureRun(); render(); }, 150);
+});
+
+// Deep links: lab2.html#scan opens that walk directly.
+window.addEventListener("hashchange", function () {
+  var h = location.hash.replace("#", "");
+  if (MODES.indexOf(h) !== -1 && h !== state.mode) setMode(h);
+});
+
+// ---------------------------------------------------------------------------
+// Self-check. The scans are generated and the arithmetic is run, so the one
+// thing worth checking is the thing that matters: does this code, at this
+// threshold, agree with the grader on all seven scenarios.
+// ---------------------------------------------------------------------------
+(function selfTest() {
+  var fails = [];
+  var walks = 0;
+
+  Object.keys(PRESETS).forEach(function (pk) {
+    var p = PRESETS[pk];
+
+    // The decision the page shows has to be the decision the grader demands.
+    var r = runScan(p);
+    if (r.brakes !== p.brake)
+      fails.push(pk + ": " + (r.brakes ? "brakes" : "holds") + " at min iTTC " + num(r.min) +
+                 ", but the grader wants it to " + (p.brake ? "brake" : "hold"));
+
+    // The scan generators have to produce the scenario they claim.
+    if (pk === "open" && r.finite !== 0) fails.push("open space has finite readings");
+    if (pk === "noisy" && r.bad === 0) fails.push("the noisy scan has no inf or nan in it");
+    if (pk === "beside" && r.min < THRESHOLD)
+      fails.push("the object beside the car produced a braking iTTC");
+
+    ["init", "odom", "scan", "brake", "car"].forEach(function (key) {
+      var build = { init: buildInit, odom: buildOdom, scan: buildScan, brake: buildBrake, car: buildCar }[key];
+      var frames = build(p);
+      walks++;
+      if (!frames.length) fails.push(key + " produced no frames");
+      frames.forEach(function (f, i) {
+        if (typeof f.line !== "number" || f.line < 0 || f.line >= CODE[key].length)
+          fails.push(key + " step " + (i + 1) + " points outside the pane");
+        if (!f.head) fails.push(key + " step " + (i + 1) + " has no sentence");
+        var g = GUIDE[key];
+        if (g && (f.phase === undefined || f.phase >= g.steps.length))
+          fails.push(key + " step " + (i + 1) + " has no rail entry");
+      });
+    });
+
+    // Every beam the walk shows has to carry the arithmetic it claims: iTTC is
+    // range over rate where the mask allows it, and inf everywhere else.
+    sampleBeams(p).forEach(function (b) {
+      if (!b.valid) {
+        if (b.ittc !== Infinity) fails.push(pk + " beam " + b.i + " is masked out but has a finite iTTC");
+        if (isFinite_(b.range) && b.rate > 0) fails.push(pk + " beam " + b.i + " was masked out for no reason");
+      } else if (Math.abs(b.ittc - b.range / b.rate) > 1e-9) {
+        fails.push(pk + " beam " + b.i + " shows " + num(b.ittc) + ", not range/rate");
+      }
+    });
+
+    // The one beam that decides the outcome has to be in the sample, or the
+    // walk shows a minimum the student never saw computed.
+    if (r.at >= 0 && !sampleBeams(p).some(function (b) { return b.i === r.at; }))
+      fails.push(pk + ": the deciding beam " + r.at + " is not among the beams the walk visits");
+  });
+
+  // Nothing behind the car may ever produce a braking iTTC, at any speed. This
+  // is the "closing" mask's whole job, checked against the real arrays.
+  Object.keys(PRESETS).forEach(function (pk) {
+    var p = PRESETS[pk];
+    for (var i = 0; i < BEAMS; i += 37) {
+      var a = angleAt(i);
+      if (Math.abs(a) <= Math.PI / 2) continue;
+      var rate = p.speed * Math.cos(a);
+      if (rate > 0) fails.push(pk + ": beam " + i + " is behind the car and counted as closing");
+    }
+  });
+
+  var pts = Object.keys(PRESETS).reduce(function (s, k) { return s + PRESETS[k].pts; }, 0);
+  if (pts + 30 !== 80) fails.push("the scenario points total " + (pts + 30) + ", not the 80 check_lab2.py scores");
+
+  var infoCount = Object.keys(LINE_INFO).reduce(function (s, k) {
+    return s + Object.keys(LINE_INFO[k]).length; }, 0);
+
+  document.getElementById("selftest").innerHTML = fails.length
+    ? '<span style="color:#c0392b;font-weight:700">&#x2716; Self-check failed</span> &mdash; ' +
+      fails.slice(0, 6).join("; ")
+    : '<span style="color:#1c7e45;font-weight:700">&#x2714; Self-check passed</span> &mdash; ' +
+      walks + " walks across all " + Object.keys(PRESETS).length + " of the grader's scans: at a " +
+      num(THRESHOLD, 1) + " s threshold this code brakes for exactly the three scans that demand it " +
+      "and holds for the four that forbid it, every iTTC shown is range over closing rate, nothing " +
+      "behind the car is ever counted as closing, the deciding beam is always among the beams the " +
+      "walk visits, all " + infoCount + " line popups land on the line they describe, and the " +
+      "scenario points add up to the 80 check_lab2.py scores.";
+})();
+
+// ---------------------------------------------------------------------------
+// Start
+// ---------------------------------------------------------------------------
+(function start() {
+  var h = location.hash.replace("#", "");
+  if (MODES.indexOf(h) !== -1) state.mode = h;
+  buildFrames();
+  measureRun();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 1 Stepper &mdash; talker, relay and the ROS 2 graph</title>
+<style>
+  :root {
+    --ink:#2c3e50; --muted:#6e6e6e; --rule:#d8dee6;
+    --green:#1c7e45; --blue:#2573a7; --orange:#a95c19;
+    --red:#c0392b; --purple:#8e44ad; --deep:#4527a0; --teal:#00695c;
+    --tint-green:#f2fbf4; --tint-blue:#eaf2f8; --tint-orange:#fff3e0;
+    --tint-red:#fce4ec; --tint-purple:#ede7f6; --tint-teal:#e0f2f1;
+    --code-bg:#1e1e2e; --code-fg:#cdd6f4; --code-dim:#9399b2; --code-hit:#45475a;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:1.5rem 1.25rem 3rem;
+         font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+         color:var(--ink); background:#fff; line-height:1.5; }
+  /* No max-width: this is shown on a projector, and a centered column throws
+     away a third of the screen. Matches the CS 1400 and CS 2420 steppers. */
+  .wrap { margin:0 auto; }
+  h1 { font-size:1.35rem; margin:0 0 .2rem; }
+  .sub { color:var(--muted); font-size:.9rem; margin:0 0 1.1rem; }
+
+  /* ---- tabs ---- */
+  .tabs { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1rem;
+          border-bottom:2px solid var(--rule); padding-bottom:.6rem; }
+  .tabs button { font:inherit; font-size:.9rem; font-weight:600; padding:.45rem 1rem;
+                 border:1px solid var(--rule); border-radius:7px 7px 0 0;
+                 background:#f7f9fb; color:var(--muted); cursor:pointer; }
+  .tabs button:hover { color:var(--ink); }
+  .tabs button.on { background:#fff; color:var(--ink); border-bottom-color:#fff; }
+  .tabs button[data-mode="pkg"].on    { border-top:3px solid var(--teal);   color:var(--teal); }
+  .tabs button[data-mode="talker"].on { border-top:3px solid var(--blue);   color:var(--blue); }
+  .tabs button[data-mode="relay"].on  { border-top:3px solid var(--green);  color:var(--green); }
+  .tabs button[data-mode="launch"].on { border-top:3px solid var(--orange); color:var(--orange); }
+  .tabs button[data-mode="cli"].on    { border-top:3px solid var(--purple); color:var(--purple); }
+  .tabs button[data-mode="graded"].on { border-top:3px solid var(--deep);   color:var(--deep); }
+  .tabs .spacer { flex:1; }
+  .tabs .step-hint { align-self:center; font-size:.76rem; color:var(--muted); }
+
+  /* ---- controls ---- */
+  .panel { border:1px solid var(--rule); border-radius:10px;
+           padding:.85rem 1rem; margin-bottom:1.1rem; background:#fcfdfe; }
+  .row { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+  .row + .row { margin-top:.6rem; }
+  .pansplit { display:grid; grid-template-columns:minmax(0,auto) minmax(300px,46rem);
+              gap:1.4rem; align-items:start; }
+  @media (max-width:1250px) { .pansplit { grid-template-columns:1fr; } }
+  .lbl { font-size:.73rem; text-transform:uppercase; letter-spacing:.05em;
+         color:var(--muted); min-width:7.5rem; }
+  button.ctl { font:inherit; font-size:.86rem; padding:.38rem .8rem;
+               border:1px solid var(--rule); border-radius:6px;
+               background:#fff; color:var(--ink); cursor:pointer; }
+  button.ctl:hover:not(:disabled) { border-color:var(--blue); color:var(--blue); }
+  button.ctl:disabled { opacity:.4; cursor:default; }
+  button.ctl.on { background:var(--blue); border-color:var(--blue); color:#fff; }
+  button.ctl.primary { background:var(--deep); border-color:var(--deep); color:#fff; }
+  .count { font-variant-numeric:tabular-nums; font-size:.84rem; color:var(--muted); margin-left:auto; }
+
+  /* The one-paragraph version of the theory. Everything longer than this
+     lives behind a click on the line it belongs to, not in the page. */
+  .whatis { border-left:3px solid var(--rule); padding-left:1.1rem; font-size:.95rem;
+            line-height:1.45; }
+  .whatis dl { margin:0; display:grid; grid-template-columns:1fr 1fr;
+               gap:.55rem 1.1rem; }
+  @media (max-width:1250px) { .whatis dl { grid-template-columns:1fr; } }
+  .whatis dt { font-weight:800; font-size:1.02rem; color:var(--ink); }
+  .whatis dd { margin:.1rem 0 0; color:#444; }
+  .whatis .both { grid-column:1 / -1; margin:.7rem 0 0; padding-top:.55rem;
+                  border-top:1px solid var(--rule); font-size:.9rem; color:#555; }
+
+  /* ---- layout: code, picture, rail ---- */
+  .solo { display:grid; grid-template-columns:1.2fr .8fr 290px; gap:1.1rem;
+          align-items:start; }
+  @media (max-width:1380px) { .solo { grid-template-columns:1.05fr .95fr; }
+                              .solo > .railcol { grid-column:1 / -1; } }
+  @media (max-width:1250px) { .solo { grid-template-columns:1fr; }
+                              .solo > .railcol { grid-column:auto; } }
+  .solo > .col { display:flex; flex-direction:column; gap:1.1rem; min-width:0;
+                 container-type:inline-size; }
+  .card { border:1px solid var(--rule); border-radius:10px; overflow:hidden; margin-bottom:0; }
+  .card > h2 { font-size:.92rem; margin:0; padding:.5rem .85rem;
+               border-bottom:1px solid var(--rule); background:#f7f9fb; }
+  .card-body { padding:.85rem; }
+
+  /* Which TODO the current step belongs to -- the one thing on the page a
+     student acts on rather than reads. */
+  .todobar { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+             background:#fff8e1; border-left:5px solid #8f6a00;
+             border-radius:0 8px 8px 0; padding:.5rem .85rem; margin-bottom:14px; }
+  .todobar .tag { background:#8f6a00; color:#fff; border-radius:4px;
+                  padding:.1rem .5rem; font-size:.76rem; letter-spacing:.05em;
+                  font-weight:700; flex:0 0 auto; }
+  .todobar .what { font-size:1rem; }
+  .todobar.bg { background:#f5f6f7; border-left-color:var(--muted); }
+  .todobar.bg .tag { background:var(--muted); }
+  .todobar code { font-family:Consolas,monospace; font-weight:700; }
+
+  /* ---- code ---- */
+  .filename { font-family:Consolas,monospace; font-size:.78rem; color:var(--muted);
+              margin:0 0 .4rem; }
+  .filename b { color:var(--ink); }
+  .code { background:var(--code-bg); color:var(--code-fg); border-radius:8px;
+          padding:.6rem 0; font-family:Consolas,"Courier New",monospace;
+          /* Scales with the column so the longest line always fits. */
+          font-size:clamp(.8rem, 2.0cqw, 1.18rem); line-height:1.5; overflow-x:auto; }
+  .code div { padding:.02rem .9rem; white-space:pre; cursor:pointer; }
+  .code div:hover { background:#313244; }
+  .code div.hit { background:var(--code-hit); border-left:3px solid #f9e2af;
+                  padding-left:calc(.9rem - 3px); }
+  .code div.pin { outline:1px dashed #f9e2af; outline-offset:-2px; }
+  /* Same scheme as the CS 1400 and CS 2420 steppers, so moving between
+     courses does not mean learning a second set of colors. */
+  .code .kw { color:#cba6f7; }
+  .code .fn { color:#89dceb; }
+  .code .nm { color:#fab387; }
+  .code .st { color:#a6e3a1; }
+  .code .cm { color:var(--code-dim); font-style:italic; }
+
+  /* The live values for the executing line, banded directly under it. */
+  .code div.calc { background:#f9e2af; color:#1e1e2e; font-size:inherit;
+                   font-weight:600; white-space:pre; cursor:default;
+                   display:flex; align-items:flex-start; gap:.55rem;
+                   padding:.22rem .8rem; margin:.12rem 0;
+                   border-left:4px solid #b8860b; }
+  .code div.calc > .cv { min-width:0; white-space:pre-wrap;
+                         text-indent:-1.1em; padding-left:1.1em; }
+  .code div.calc::before { content:"THIS STEP"; font-size:.62rem; font-weight:800;
+                           letter-spacing:.06em; color:#6b4f04;
+                           background:rgba(0,0,0,.09); border-radius:3px;
+                           padding:.08em .32em; flex:0 0 auto; margin-top:.28em; }
+  .code div.calc:hover { background:#f9e2af; }
+
+  /* ---- the per-line popup: this is where the theory lives ---- */
+  .lineinfo { border:1px solid var(--rule); border-left:4px solid var(--deep);
+              border-radius:0 8px 8px 0; padding:.6rem .85rem; margin:.7rem 0 0;
+              background:#fcfcfd; font-size:.83rem; }
+  .lineinfo h4 { margin:0 0 .35rem; font-size:.84rem; font-family:Consolas,monospace;
+                 color:var(--deep); }
+  .lineinfo .close { float:right; font-size:.68rem; color:var(--muted);
+                     text-transform:uppercase; letter-spacing:.05em; }
+  .li-items { margin:.3rem 0 0; padding-left:1.05rem; }
+  .li-items li { margin-bottom:.22rem; }
+  .li-kind { display:inline-block; font-size:.66rem; text-transform:uppercase;
+             letter-spacing:.04em; padding:.03rem .32rem; border-radius:3px;
+             margin-right:.3rem; vertical-align:1px; }
+  .k-why    { background:var(--tint-blue);   color:var(--blue); }
+  .k-trap   { background:var(--tint-red);    color:var(--red); }
+  .k-note   { background:var(--tint-green);  color:var(--green); }
+  .k-syntax { background:var(--tint-purple); color:var(--deep); }
+  .hint { font-size:.72rem; color:var(--muted); margin:.5rem 0 0; }
+
+  /* ---- variables ---- */
+  .locals { display:grid; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));
+            gap:.5rem 1.1rem; margin:0; }
+  .locals h5 { margin:0 0 .3rem; font-size:.68rem; font-weight:700; color:var(--muted);
+               text-transform:uppercase; letter-spacing:.06em; }
+  .lgroup + .lgroup { margin-top:.7rem; padding-top:.6rem; border-top:1px solid var(--rule); }
+  .lv { display:flex; align-items:baseline; gap:.45rem; font-size:.79rem; line-height:1.55; }
+  .ln { font-family:Consolas,monospace; font-weight:650; color:var(--ink); min-width:5.4rem; }
+  .lval { font-family:Consolas,monospace; font-weight:700;
+          color:var(--blue); background:var(--tint-blue);
+          border:1px solid rgba(37,115,167,.3); border-radius:999px;
+          padding:.02rem .45rem; min-width:1.6rem; text-align:center; }
+  .lval.pend { color:var(--muted); background:#f0f2f5; border-color:var(--rule);
+               font-weight:600; }
+  .lval.hot { color:#8a5400; background:#fff3e0; border-color:#a95c19; }
+  .lat { color:var(--muted); font-size:.75rem; }
+
+  /* ---- the ROS graph ---- */
+  svg.gr { width:100%; height:auto; display:block; }
+  svg.gr text { font-family:"Segoe UI",system-ui,sans-serif; font-size:13px; font-weight:600; }
+  svg.gr text.sub { font-size:10px; font-weight:400; fill:#6e6e6e; }
+  svg.gr text.mono { font-family:Consolas,monospace; font-size:11px; font-weight:600; }
+
+  .msgbox { margin:.7rem 0 0; border:1px solid var(--rule); border-radius:8px;
+            overflow:hidden; font-size:.78rem; }
+  .msgbox h5 { margin:0; padding:.3rem .6rem; background:#f7f9fb; font-size:.7rem;
+               text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+               border-bottom:1px solid var(--rule); }
+  .msgbox table { width:100%; border-collapse:collapse; font-family:Consolas,monospace; }
+  .msgbox td { padding:.2rem .6rem; border-bottom:1px solid #eef1f4; }
+  .msgbox tr:last-child td { border-bottom:0; }
+  .msgbox td.v { text-align:right; font-weight:700; }
+  .msgbox tr.set td { background:#fffbe9; }
+  .msgbox tr.set td.v { color:#8a5400; }
+  .msgbox .none { color:var(--muted); font-style:italic; font-family:inherit; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:.5rem; margin:.8rem 0 0; min-height:2rem; }
+  .chip { font-size:.8rem; padding:.3rem .65rem; border-radius:999px;
+          border:1px solid var(--rule); background:#fff; font-variant-numeric:tabular-nums; }
+  .chip.cur { border-color:var(--orange); color:var(--orange); background:var(--tint-orange); }
+  .chip.ok  { border-color:var(--green);  color:var(--green);  background:var(--tint-green); }
+  .chip.no  { border-color:var(--red);    color:var(--red);    background:var(--tint-red); }
+
+  /* ---- narration ---- */
+  .nowbox { background:#f9e2af; color:#1e1e2e; border-left:4px solid #b8860b;
+            border-radius:0 8px 8px 0; padding:.6rem .8rem; margin:0; }
+  .nowbox .nownote { margin:0; font-size:.93rem; line-height:1.55; }
+  .nowbox .nownote code { font-family:Consolas,monospace; font-size:.93em;
+                          background:rgba(0,0,0,.09); border-radius:3px; padding:.03em .3em; }
+  .why { margin:.6rem 0 0; padding-left:1.1rem; font-size:.86rem; }
+  .why li { margin-bottom:.22rem; }
+
+  /* ---- the rail ---- */
+  .rail { font-size:.78rem; }
+  .rail .rlab { font-size:.62rem; letter-spacing:.07em; text-transform:uppercase;
+                color:var(--muted); font-weight:700; margin:0 0 .25rem; }
+  .rail .rnow { font-size:.92rem; font-weight:700; color:#c64500;
+                background:#fff3e0; border:1px solid #a95c19; border-radius:7px;
+                padding:.3rem .5rem; margin:0 0 .9rem; line-height:1.3; }
+  .rail ol { list-style:none; margin:0; padding:0; display:grid; gap:.3rem; }
+  .rail > .card-body > ol > li { border:1px solid var(--rule); border-radius:7px;
+             background:#f7f9fb; padding:.33rem .45rem; cursor:pointer; }
+  .rail ol li:hover { border-color:var(--deep); }
+  .rail ol li.on { background:#ede7f6; border-color:var(--deep); }
+  .rail .rt { display:flex; gap:.4rem; align-items:baseline; line-height:1.35; }
+  .rail .rn { flex:0 0 auto; width:1.05rem; height:1.05rem; border-radius:50%;
+              background:var(--muted); color:#fff; font-size:.6rem; font-weight:700;
+              display:flex; align-items:center; justify-content:center;
+              position:relative; top:.15rem; }
+  .rail ol li.on .rn { background:var(--deep); }
+  .rail ul { margin:.35rem 0 0; padding:0; list-style:none; }
+  .rail ul li { border:0; background:none; padding:0 0 0 .7rem; margin:0 0 .2rem;
+                position:relative; font-size:.74rem; line-height:1.4; cursor:default; }
+  .rail ul li::before { content:""; position:absolute; left:0; top:.5em;
+                        width:.25rem; height:.25rem; border-radius:50%;
+                        background:var(--muted); }
+
+  .facts { font-size:.8rem; margin:0; }
+  .facts dt { font-weight:600; float:left; width:7.5rem; clear:left; color:var(--muted); }
+  .facts dd { margin:0 0 .3rem 7.5rem; font-family:Consolas,monospace; }
+
+  /* ---- the graded table ---- */
+  table.v { width:100%; border-collapse:collapse; font-size:.85rem; margin:.3rem 0 .8rem; }
+  table.v th, table.v td { border:1px solid var(--rule); padding:.4rem .6rem; text-align:left;
+                           vertical-align:top; }
+  table.v th { background:#f5f7f9; }
+  table.v td.pts { text-align:right; font-variant-numeric:tabular-nums; width:3.5rem; }
+  table.v tr.part td { background:#f7f9fb; font-weight:700; }
+  table.v code { font-family:Consolas,monospace; }
+  .verdict { border-left:5px solid var(--deep); background:var(--tint-purple);
+             border-radius:0 8px 8px 0; padding:.9rem 1.1rem; font-size:.88rem; }
+  .verdict p { margin:0 0 .55rem; }
+  .verdict p:last-child { margin:0; }
+
+  .legend { font-size:.72rem; color:var(--muted); margin:.6rem 0 0; }
+  .legend span { display:inline-block; margin-right:.9rem; }
+  .sw { display:inline-block; width:.75rem; height:.75rem; border-radius:3px;
+        border:2px solid var(--rule); vertical-align:-2px; margin-right:.25rem; }
+  .selftest { margin-top:1.2rem; font-size:.78rem; color:var(--muted);
+              border-top:1px solid var(--rule); padding-top:.6rem; }
+  code.inl { background:#eef2f6; padding:.08em .32em; border-radius:4px;
+             font-family:Consolas,monospace; font-size:.92em; }
+  footer { margin-top:1.4rem; padding-top:.7rem; border-top:1px solid var(--rule);
+           color:var(--muted); font-size:.82rem; }
+  footer a { color:var(--teal); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lab 1 &mdash; talker, relay, and the graph they make</h1>
+  <p class="sub">The code you are about to write, run one line at a time. Every step shows the
+     line executing, what each variable holds at that moment, and which half of the ROS graph
+     exists yet. <strong>Click any line</strong> for what it is for and what goes wrong without it.</p>
+
+  <div class="tabs" id="tabs">
+    <button data-mode="pkg">1 &middot; The package</button>
+    <button data-mode="talker">2 &middot; talker.py</button>
+    <button data-mode="relay">3 &middot; relay.py</button>
+    <button data-mode="launch">4 &middot; The launch file</button>
+    <button data-mode="cli">5 &middot; See the graph</button>
+    <button data-mode="graded">6 &middot; What is graded</button>
+    <span class="spacer"></span>
+    <span class="step-hint">&larr; &rarr; arrow keys step &middot; space plays</span>
+  </div>
+
+  <div class="panel">
+    <div class="pansplit">
+      <div>
+        <div class="row" id="presetRow"></div>
+        <div class="row">
+          <span class="lbl">Step</span>
+          <button class="ctl" id="first">&laquo; First</button>
+          <button class="ctl" id="prev">&lsaquo; Prev</button>
+          <button class="ctl primary" id="play">&#9654; Play</button>
+          <button class="ctl" id="next">Next &rsaquo;</button>
+          <button class="ctl" id="last">Last &raquo;</button>
+          <span class="count" id="frameCount"></span>
+        </div>
+      </div>
+      <div class="whatis" id="whatis"></div>
+    </div>
+  </div>
+
+  <div id="stage"></div>
+
+  <p class="legend" id="legend"></p>
+  <div class="selftest" id="selftest"></div>
+
+  <footer>
+    Part of <a href="../../weber_assignments/labs/lab1-sim.html">Lab 1 &mdash; Introduction to ROS 2</a>,
+    CS 6300 Autonomous Racing, Weber State University. The code shown is the finished
+    version of the skeleton in <code class="inl">lab1_pkg</code>, so a highlighted line is a
+    line you can find in your own file.
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------------------
+// The code panes. These are the TODOs of lab1_pkg written out: the stepper and
+// the file the student is editing have to be the same code, or the highlight
+// is pointing at something they cannot find.
+// ---------------------------------------------------------------------------
+var CODE = {
+  pkg: [
+    "<!-- package.xml -->",
+    "<package format=\"3\">",
+    "  <name>lab1_pkg</name>",
+    "",
+    "  <depend>rclpy</depend>",
+    "  <depend>ackermann_msgs</depend>",
+    "</package>",
+    "",
+    "# setup.py",
+    "setup(",
+    "    name='lab1_pkg',",
+    "    data_files=[",
+    "        ('share/lab1_pkg/launch', glob('launch/*.py')),",
+    "    ],",
+    "    entry_points={",
+    "        'console_scripts': [",
+    "            'talker = lab1_pkg.talker:main',",
+    "            'relay = lab1_pkg.relay:main',",
+    "        ],",
+    "    },",
+    ")"
+  ],
+
+  talker: [
+    "import rclpy",
+    "from rclpy.node import Node",
+    "from ackermann_msgs.msg import AckermannDriveStamped",
+    "",
+    "",
+    "class Talker(Node):",
+    "",
+    "    def __init__(self):",
+    "        super().__init__('talker')",
+    "",
+    "        self.declare_parameter('v', 0.0)      # speed, m/s",
+    "        self.declare_parameter('d', 0.0)      # steering angle, rad",
+    "",
+    "        self.publisher = self.create_publisher(",
+    "            AckermannDriveStamped, 'drive', 10)",
+    "",
+    "        self.timer = self.create_timer(0.001, self.publish_drive)",
+    "",
+    "    def publish_drive(self):",
+    "        v = self.get_parameter('v').value     # every tick, not once",
+    "        d = self.get_parameter('d').value",
+    "",
+    "        msg = AckermannDriveStamped()",
+    "        msg.drive.speed = v",
+    "        msg.drive.steering_angle = d",
+    "        self.publisher.publish(msg)"
+  ],
+
+  relay: [
+    "import rclpy",
+    "from rclpy.node import Node",
+    "from ackermann_msgs.msg import AckermannDriveStamped",
+    "",
+    "",
+    "class Relay(Node):",
+    "",
+    "    def __init__(self):",
+    "        super().__init__('relay')",
+    "",
+    "        self.publisher = self.create_publisher(",
+    "            AckermannDriveStamped, 'drive_relay', 10)",
+    "",
+    "        self.subscription = self.create_subscription(",
+    "            AckermannDriveStamped, 'drive', self.drive_callback, 10)",
+    "",
+    "    def drive_callback(self, msg):",
+    "        out = AckermannDriveStamped()",
+    "        out.drive.speed = msg.drive.speed * 3.0",
+    "        out.drive.steering_angle = msg.drive.steering_angle * 3.0",
+    "        self.publisher.publish(out)"
+  ],
+
+  launch: [
+    "from launch import LaunchDescription",
+    "from launch_ros.actions import Node",
+    "",
+    "",
+    "def generate_launch_description():",
+    "    return LaunchDescription([",
+    "        Node(",
+    "            package='lab1_pkg',",
+    "            executable='talker',",
+    "            parameters=[{'v': 1.0, 'd': 0.0}],",
+    "        ),",
+    "        Node(",
+    "            package='lab1_pkg',",
+    "            executable='relay',",
+    "        ),",
+    "    ])"
+  ],
+
+  cli: [
+    "$ colcon build --packages-select lab1_pkg",
+    "$ source install/setup.bash",
+    "",
+    "$ ros2 launch lab1_pkg lab1_launch.py",
+    "",
+    "$ ros2 node list",
+    "$ ros2 topic list",
+    "",
+    "$ ros2 topic echo /drive --once",
+    "$ ros2 topic echo /drive_relay --once",
+    "",
+    "$ ros2 param set /talker v 2.0",
+    "",
+    "$ ros2 topic hz /drive",
+    "$ rqt_graph"
+  ]
+};
+
+// Line numbers are looked up by text, never typed in. Hard-coded indices are
+// the one thing guaranteed to rot the first time a line is added to a pane.
+function L(key, needle) {
+  var lines = CODE[key];
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].indexOf(needle) !== -1) return i;
+  }
+  throw new Error("no line matching " + needle + " in " + key);
+}
+
+// ---------------------------------------------------------------------------
+// The theory, filed under the line it belongs to. Click a line, get this.
+// Nothing here is on the page until it is asked for, which is the point:
+// the walk itself stays about what the code is doing right now.
+// ---------------------------------------------------------------------------
+var LINE_INFO = {
+  pkg: {},
+  talker: {},
+  relay: {},
+  launch: {},
+  cli: {}
+};
+
+function info(key, needle, src, what, items) {
+  LINE_INFO[key][L(key, needle)] = { src: src, what: what, items: items };
+}
+
+info("pkg", "<depend>ackermann_msgs", "<depend>ackermann_msgs</depend>",
+  "The declaration that your package needs the Ackermann message types.",
+  [["trap", "Leave this out and <code class='inl'>import</code> still works on your machine, because the message package is installed there anyway. It fails on a clean machine and on the grader's &mdash; the one place you cannot debug it."],
+   ["why", "<code class='inl'>rosdep install --from-paths src --ignore-src -y</code> reads exactly this line to decide what to fetch. A dependency that is not declared is a dependency that is not installed."],
+   ["note", "Worth 10 of the 75 autograded points on its own."]]);
+
+info("pkg", "'talker = lab1_pkg.talker:main'", "'talker = lab1_pkg.talker:main'",
+  "The line that turns a .py file into a command.",
+  [["syntax", "Read it as <em>name</em> = <em>module</em>:<em>function</em>. The name on the left is what you type after <code class='inl'>ros2 run lab1_pkg</code>; the right half is the function that gets called."],
+   ["trap", "A typo on the left means <code class='inl'>ros2 run lab1_pkg talker</code> reports no executable. A typo on the right means it is found and then crashes on start &mdash; two very different error messages for the same kind of mistake."],
+   ["why", "Nothing you write in <code class='inl'>talker.py</code> runs until this entry exists, which is why Part 1 comes before Part 2."]]);
+
+info("pkg", "glob('launch/*.py')", "('share/lab1_pkg/launch', glob('launch/*.py'))",
+  "Installs the launch file so ros2 can find it.",
+  [["trap", "Without this, <code class='inl'>lab1_launch.py</code> sits in your source tree and <code class='inl'>ros2 launch lab1_pkg lab1_launch.py</code> cannot see it. The file exists, the command still fails &mdash; worth 10 points on its own in Part 3."],
+   ["note", "You only need this for Part 3. If you are on Part 2, ignore it."]]);
+
+info("talker", "from ackermann_msgs.msg import", "from ackermann_msgs.msg import AckermannDriveStamped",
+  "Brings in the message type the whole lab moves around.",
+  [["why", "<code class='inl'>AckermannDriveStamped</code> is a <em>stamped</em> message: a header with a timestamp, plus a <code class='inl'>drive</code> field holding speed and steering angle. The two values the lab cares about are one level down, inside <code class='inl'>.drive</code>."],
+   ["trap", "This import is what makes the <code class='inl'>package.xml</code> dependency matter. Both have to be right, and only one of them raises an error when it is wrong."]]);
+
+info("talker", "declare_parameter('v'", "self.declare_parameter('v', 0.0)",
+  "Creates a parameter named v, defaulting to 0.0.",
+  [["syntax", "The default decides the parameter's <em>type</em>. <code class='inl'>0.0</code> makes it a double; writing <code class='inl'>0</code> makes it an integer, and then <code class='inl'>ros2 param set /talker v 2.5</code> is rejected as the wrong type."],
+   ["why", "Declaring a parameter is what makes it show up in <code class='inl'>ros2 param list</code> and settable from the launch file. An undeclared parameter read with <code class='inl'>get_parameter</code> raises instead of returning a default."],
+   ["note", "Part 2 asks for two of these, <code class='inl'>v</code> and <code class='inl'>d</code>, both defaulting to <code class='inl'>0.0</code>."]]);
+
+info("talker", "AckermannDriveStamped, 'drive', 10", "AckermannDriveStamped, 'drive', 10)",
+  "Message type, topic name, queue depth.",
+  [["trap", "The topic is <code class='inl'>'drive'</code>, with no leading slash. A relative name gets resolved against the node's namespace, which here produces <code class='inl'>/drive</code> anyway &mdash; but if you ever launch the node into a namespace, the slash is the difference between <code class='inl'>/car1/drive</code> and a topic nobody is listening to."],
+   ["syntax", "The <code class='inl'>10</code> is the queue depth: how many outgoing messages ROS will hold if the subscriber is slow. It is not a rate."],
+   ["why", "The grader subscribes to exactly <code class='inl'>drive</code> and <code class='inl'>drive_relay</code>. Any other spelling scores zero even if the node is perfect."]]);
+
+info("talker", "create_timer(0.001", "self.timer = self.create_timer(0.001, self.publish_drive)",
+  "Calls publish_drive every millisecond.",
+  [["syntax", "The period is in <em>seconds</em>, so <code class='inl'>0.001</code> is 1000 Hz. Passing <code class='inl'>1000</code> by mistake asks for one message every sixteen minutes."],
+   ["trap", "Assigning it to <code class='inl'>self.timer</code> is not decoration. Drop the <code class='inl'>self.</code> and the timer is garbage collected the moment <code class='inl'>__init__</code> returns, and the node sits there publishing nothing."],
+   ["note", "You pass the method itself, <code class='inl'>self.publish_drive</code>, with no parentheses. With parentheses you would call it once, now, and hand ROS the return value."]]);
+
+info("talker", "v = self.get_parameter", "v = self.get_parameter('v').value",
+  "Reads the parameter's current value, on every tick.",
+  [["trap", "This is the line the lab is really testing. Read the parameters in <code class='inl'>__init__</code> and store them, and the node publishes the right thing &mdash; until someone runs <code class='inl'>ros2 param set</code>, at which point it keeps publishing the old value forever. 5 points."],
+   ["syntax", "<code class='inl'>get_parameter</code> returns a <code class='inl'>Parameter</code> object; <code class='inl'>.value</code> is the number inside it. Publishing the object itself is a type error."],
+   ["why", "A parameter is a live knob, not a constructor argument. Reading it where it is used is what makes it one."]]);
+
+info("talker", "msg = AckermannDriveStamped()", "msg = AckermannDriveStamped()",
+  "A fresh message, every field zero.",
+  [["note", "Building it inside the callback means each tick publishes an independent message. Reusing one instance across ticks works here, but it stops working the moment two callbacks touch it."],
+   ["why", "The header timestamp is left unset in this lab. Nothing in Lab 1 reads it; Lab 2's grader does stamp its messages, which is worth knowing before you get there."]]);
+
+info("talker", "msg.drive.speed = v", "msg.drive.speed = v",
+  "Speed goes one level down, inside .drive.",
+  [["trap", "<code class='inl'>msg.speed</code> does not exist and raises <code class='inl'>AttributeError</code>. The <em>Stamped</em> in the type name is the clue: the message is a header plus a <code class='inl'>drive</code> payload."],
+   ["syntax", "The field is a float. Assigning an <code class='inl'>int</code> &mdash; <code class='inl'>msg.drive.speed = 1</code> &mdash; raises, which catches people whose parameter defaults were integers."]]);
+
+info("talker", "self.publisher.publish(msg)", "self.publisher.publish(msg)",
+  "Hands the message to ROS. Nothing happens until this line.",
+  [["why", "Everything above this line is local bookkeeping. This is the only line in the file another process can observe."],
+   ["note", "If <code class='inl'>ros2 topic echo /drive</code> prints nothing, the question is whether this line is being reached &mdash; which is usually the timer, not the publisher."]]);
+
+info("relay", "'drive_relay', 10", "AckermannDriveStamped, 'drive_relay', 10)",
+  "The relay's output topic.",
+  [["trap", "Publishing back onto <code class='inl'>drive</code> instead of <code class='inl'>drive_relay</code> builds a feedback loop: the relay hears its own message, triples it again, and the speed runs away to infinity in a few milliseconds. The grader sees nothing on <code class='inl'>drive_relay</code> and your terminal fills up."],
+   ["why", "Two topics is what makes the graph a chain instead of a circle. It is also the whole point of the <code class='inl'>rqt_graph</code> screenshot in Part 3."]]);
+
+info("relay", "self.drive_callback, 10", "AckermannDriveStamped, 'drive', self.drive_callback, 10)",
+  "Type, topic, the function to call, queue depth.",
+  [["syntax", "The callback is passed by name, no parentheses. ROS calls it once per message, handing in the message as the argument."],
+   ["trap", "As with the timer, keep a reference &mdash; <code class='inl'>self.subscription = ...</code>. A subscription nobody holds gets collected, and the callback silently never fires."],
+   ["note", "The subscription's topic has to match the talker's publisher exactly, or the two nodes are both running and never speak."]]);
+
+info("relay", "out = AckermannDriveStamped()", "out = AckermannDriveStamped()",
+  "A new message, rather than editing the one that arrived.",
+  [["trap", "Mutating <code class='inl'>msg</code> and republishing it is the shortcut everybody tries. It happens to work in Python with one subscriber, and it is the wrong habit: the incoming message belongs to the subscription, and other callbacks may be looking at it."],
+   ["why", "Also clearer to read: <code class='inl'>msg</code> is what came in, <code class='inl'>out</code> is what goes out."]]);
+
+info("relay", "* 3.0", "out.drive.speed = msg.drive.speed * 3.0",
+  "Three times the incoming speed.",
+  [["note", "Both fields get tripled, speed and steering angle. The grader publishes a known command on <code class='inl'>drive</code> and checks for exactly 3x on <code class='inl'>drive_relay</code>, so a factor applied to only one of the two fields scores zero."],
+   ["why", "The multiplier is arbitrary on purpose. It makes it obvious at a glance which topic you are looking at in <code class='inl'>ros2 topic echo</code>."]]);
+
+info("launch", "parameters=[{'v': 1.0, 'd': 0.0}]", "parameters=[{'v': 1.0, 'd': 0.0}]",
+  "Sets the talker's parameters at startup.",
+  [["syntax", "A <em>list of dicts</em>, not a dict. <code class='inl'>parameters={'v': 1.0}</code> is a common and confusing failure."],
+   ["trap", "These values have to be floats. <code class='inl'>{'v': 1}</code> fails against a parameter declared with a <code class='inl'>0.0</code> default, which is the same type mismatch as the declaration line in talker.py, arriving from the other direction."],
+   ["why", "This is what the launch file buys you: two nodes and their configuration in one command, instead of three terminals and a <code class='inl'>ros2 param set</code>."]]);
+
+info("launch", "executable='talker'", "executable='talker'",
+  "The name from setup.py's console_scripts.",
+  [["trap", "This is the name on the <em>left</em> of the entry point, not the file name. <code class='inl'>executable='talker.py'</code> does not resolve."],
+   ["note", "<code class='inl'>package</code> plus <code class='inl'>executable</code> is exactly what <code class='inl'>ros2 run lab1_pkg talker</code> passes, written out as a dict."]]);
+
+info("cli", "ros2 topic hz /drive", "$ ros2 topic hz /drive",
+  "Measures how fast the talker is actually publishing.",
+  [["why", "The timer asked for 1000 Hz. What you get is lower, and seeing the real number is the useful part: a timer is a request, not a guarantee."],
+   ["note", "A good sanity check when <code class='inl'>echo</code> shows messages but something downstream looks sluggish."]]);
+
+info("cli", "rqt_graph", "$ rqt_graph",
+  "Draws the graph you just built.",
+  [["note", "Part 3 asks for this screenshot. Untick <em>Debug</em> and tick <em>all topics</em> if the picture comes up emptier than you expect."],
+   ["trap", "<code class='inl'>rqt_graph</code> caches: press the refresh arrow after starting or stopping a node, or you will screenshot a graph that is no longer running."]]);
+
+// ---------------------------------------------------------------------------
+// The one-paragraph theory, per tab. If it does not fit here, it belongs in a
+// LINE_INFO popup instead.
+// ---------------------------------------------------------------------------
+var WHATIS = {
+  pkg: { a: ["A ROS 2 package", "A folder ROS can find, which means two files: <code class='inl'>package.xml</code> says what it needs, <code class='inl'>setup.py</code> says what it offers."],
+         b: ["An entry point", "A name mapped to a function. It is what makes <code class='inl'>ros2 run</code> able to start a plain Python file."],
+         both: "Part 1 is only these two files, and nothing you write later runs until they are right." },
+  talker: { a: ["A publisher", "An outbox for one message type on one topic. Created once, used forever."],
+            b: ["A parameter", "A named value you can change from outside the node while it runs &mdash; which only works if you read it where you use it."],
+            both: "A timer fires, the callback reads the knobs and sends one message. That is the whole node." },
+  relay: { a: ["A subscription", "An inbox: a topic, and a function ROS calls once per message that arrives on it."],
+           b: ["A callback", "Your code, called by ROS rather than by you. You never call it; you only say what it is."],
+           both: "The relay has no timer. It runs exactly as often as the talker publishes, which is what makes the two nodes a chain." },
+  launch: { a: ["A launch file", "Python that returns a description of what to start. It is not a script that starts things."],
+            b: ["A Node action", "One process to run, named by package and executable, plus the parameters it should start with."],
+            both: "Two nodes and their configuration in one command, instead of three terminals." },
+  cli: { a: ["ros2 topic", "Asks the graph what is being published and lets you read it without writing a subscriber."],
+         b: ["rqt_graph", "Draws nodes and topics as they are right now. The picture Part 3 asks you to submit."],
+         both: "These commands are how you tell the difference between code that is wrong and code that was never started." },
+  graded: { a: ["check_lab1.py", "Starts your nodes, publishes on their topics, and listens. 75 points, no partial credit per check."],
+            b: ["SUBMISSION.md", "25 more points, graded by hand. The checker never looks at it."],
+            both: "Run the checker before you push. It fails the same way the grader will." }
+};
+
+// ---------------------------------------------------------------------------
+// The rail: where we are in the walk, and what each stretch is about.
+// ---------------------------------------------------------------------------
+var GUIDE = {
+  pkg: { where: "in the two package files", steps: [
+    { t: "Declare the dependency", b: ["<code>ackermann_msgs</code> in package.xml", "rosdep reads this line, nothing else"] },
+    { t: "Register the executables", b: ["one console_scripts line per node", "the left name is what ros2 run takes"] },
+    { t: "Install the launch folder", b: ["needed for Part 3 only"] }
+  ] },
+  talker: { where: "in talker.py", steps: [
+    { t: "Construct the node", b: ["super().__init__ names it", "the name is what ros2 node list shows"] },
+    { t: "Declare the parameters", b: ["v and d, both 0.0", "the default fixes the type"] },
+    { t: "Create the publisher", b: ["type, topic, depth", "nothing is sent yet"] },
+    { t: "Start the timer", b: ["0.001 s, so 1000 Hz", "keep a reference or it is collected"] },
+    { t: "Each tick: read the knobs", b: ["read here, not in __init__", "this is what makes param set work"] },
+    { t: "Each tick: build and send", b: ["speed and angle live under .drive", "publish is the only observable line"] }
+  ] },
+  relay: { where: "in relay.py", steps: [
+    { t: "Construct the node", b: ["named relay"] },
+    { t: "Create the publisher", b: ["on drive_relay, not drive", "publishing to drive would feed back"] },
+    { t: "Subscribe to drive", b: ["hand ROS the callback by name", "keep a reference"] },
+    { t: "Each message: triple it", b: ["a new message, not the incoming one", "both fields, not just speed"] },
+    { t: "Each message: send it", b: ["one in, one out"] }
+  ] },
+  launch: { where: "in lab1_launch.py", steps: [
+    { t: "Return a description", b: ["the function returns, it does not start"] },
+    { t: "The talker action", b: ["package + executable", "parameters as a list of dicts"] },
+    { t: "The relay action", b: ["no parameters to set"] },
+    { t: "Both come up together", b: ["one command, two processes"] }
+  ] },
+  cli: { where: "at the terminal", steps: [
+    { t: "Build and source", b: ["source after every build", "a new terminal needs sourcing too"] },
+    { t: "Start the graph", b: ["one launch, two nodes"] },
+    { t: "Ask what exists", b: ["node list, topic list"] },
+    { t: "Read the traffic", b: ["echo shows the 3x relation"] },
+    { t: "Turn the knob", b: ["param set proves you read it per tick"] },
+    { t: "Draw it", b: ["rqt_graph for the screenshot"] }
+  ] }
+};
+
+var FACTS = {
+  talker: [["message", "AckermannDriveStamped"], ["topic", "drive"], ["timer", "0.001 s = 1000 Hz"],
+           ["queue depth", "10"], ["parameters", "v, d (double)"]],
+  relay: [["message", "AckermannDriveStamped"], ["in", "drive"], ["out", "drive_relay"],
+          ["factor", "3.0 on both fields"], ["rate", "whatever the talker does"]],
+  pkg: [["package", "lab1_pkg"], ["depends", "rclpy, ackermann_msgs"],
+        ["executables", "talker, relay"], ["part 1 worth", "25 of 75 points"]],
+  launch: [["file", "launch/lab1_launch.py"], ["starts", "talker, relay"],
+           ["params", "v = 1.0, d = 0.0"], ["part 3 worth", "25 of 75 points"]],
+  cli: [["build", "colcon build"], ["source", "install/setup.bash"],
+        ["topics", "/drive, /drive_relay"], ["nodes", "/talker, /relay"]]
+};
+
+// Presets are parameter values, because the parameters are the only thing in
+// Lab 1 a student can vary without editing the code. The third one exists to
+// demonstrate the 5-point trap and nothing else.
+var PRESETS = {
+  slow:   { label: "v = 1.0, d = 0.0",  v: 1.0,  d: 0.0,  change: null },
+  turn:   { label: "v = 2.5, d = 0.3",  v: 2.5,  d: 0.3,  change: null },
+  change: { label: "then param set v = 4.0", v: 1.0, d: 0.0, change: 4.0 }
+};
+
+// ---------------------------------------------------------------------------
+// The walks. Each builder returns a list of frames; a frame is everything the
+// page shows at one step, so stepping is just indexing into an array.
+//
+//   line    which line of the pane is executing
+//   head    the sentence for this step
+//   calc    the live values, banded under the executing line
+//   phase   which rail entry this step belongs to
+//   tag     the TODO this step is part of, for the banner
+//   vars    variable groups, drawn as named values
+//   ros     which parts of the graph exist, and what is in flight
+//   msg     the message being built, field by field
+//   chips   the short status row under the picture
+// ---------------------------------------------------------------------------
+function n1(x) { return (Math.round(x * 1000) / 1000).toFixed(1); }
+
+// An empty AckermannDriveStamped, as Python would hand it to you.
+function blankMsg() { return { speed: null, angle: null }; }
+
+function buildPkg() {
+  var f = [];
+  var alive = { talker: false, relay: false, drive: false, relay_t: false };
+
+  f.push({ line: L("pkg", "<depend>rclpy"), phase: 0, tag: "Part 1",
+    file: "lab1_pkg/package.xml",
+    head: "<code>rclpy</code> was already declared for you. It is the Python client library &mdash; the thing <code>import rclpy</code> needs.",
+    calc: "rosdep reads package.xml -> installs rclpy",
+    vars: [["declared so far", [["rclpy", "yes", "already in the skeleton"]]]],
+    ros: alive, note: "Nothing is running. These files only decide what <em>can</em> run.",
+    chips: [["", "no nodes yet"]] });
+
+  f.push({ line: L("pkg", "<depend>ackermann_msgs"), phase: 0, tag: "Part 1",
+    file: "lab1_pkg/package.xml",
+    head: "Your line. Without it the message import works on your machine and fails on the grader's.",
+    calc: "rosdep install ... -> fetches ackermann_msgs",
+    vars: [["declared so far", [["rclpy", "yes", ""], ["ackermann_msgs", "yes", "your line"]]]],
+    ros: alive, note: "Worth 10 points, and the hardest failure in the lab to see on your own machine.",
+    chips: [["ok", "dependency declared"]] });
+
+  f.push({ line: L("pkg", "'talker = lab1_pkg.talker:main'"), phase: 1, tag: "Part 1",
+    file: "lab1_pkg/setup.py",
+    head: "Maps the name <code>talker</code> to the <code>main</code> function in <code>lab1_pkg/talker.py</code>.",
+    calc: "ros2 run lab1_pkg talker  ->  lab1_pkg.talker:main()",
+    vars: [["registered", [["talker", "main", "lab1_pkg.talker"]]]],
+    ros: alive, note: "Until this exists, <code>talker.py</code> is a file ROS has never heard of.",
+    chips: [["ok", "talker registered"]] });
+
+  f.push({ line: L("pkg", "'relay = lab1_pkg.relay:main'"), phase: 1, tag: "Part 1",
+    file: "lab1_pkg/setup.py",
+    head: "The same thing for the relay. Two nodes, two entry points.",
+    calc: "ros2 run lab1_pkg relay   ->  lab1_pkg.relay:main()",
+    vars: [["registered", [["talker", "main", "lab1_pkg.talker"], ["relay", "main", "lab1_pkg.relay"]]]],
+    ros: alive, note: "15 points covers both of these together.",
+    chips: [["ok", "both registered"]] });
+
+  f.push({ line: L("pkg", "glob('launch/*.py')"), phase: 2, tag: "Part 3",
+    file: "lab1_pkg/setup.py",
+    head: "Copies the launch folder into the install tree, which is the only place <code>ros2 launch</code> looks.",
+    calc: "launch/lab1_launch.py -> install/share/lab1_pkg/launch/",
+    vars: [["installed", [["launch/*.py", "yes", "share/lab1_pkg/launch"]]]],
+    ros: alive, note: "Come back to this when you start Part 3.",
+    chips: [["ok", "launch file installed"]] });
+
+  return f;
+}
+
+function buildTalker(p) {
+  var f = [];
+  var alive = { talker: false, relay: false, drive: false, relay_t: false };
+  var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+  var declared = { v: null, d: null };
+
+  f.push({ line: L("talker", "from ackermann_msgs.msg import"), phase: 0, tag: "Part 2",
+    head: "The import that needs the <code>package.xml</code> dependency from Part 1.",
+    calc: "AckermannDriveStamped: header + drive{speed, steering_angle, ...}",
+    vars: [["module", [["rclpy", "imported", ""], ["Node", "imported", ""], ["AckermannDriveStamped", "imported", "your line"]]]],
+    ros: clone(alive), chips: [["", "node not constructed yet"]] });
+
+  f.push({ line: L("talker", "super().__init__('talker')"), phase: 0, tag: "given",
+    head: "The node exists and is called <code>talker</code>. This is the name <code>ros2 node list</code> prints.",
+    calc: "node name = /talker",
+    vars: [["self", [["node name", "talker", ""]]]],
+    ros: (alive.talker = true, clone(alive)), chips: [["cur", "/talker is up"]] });
+
+  declared.v = 0.0;
+  f.push({ line: L("talker", "declare_parameter('v'"), phase: 1, tag: "Part 2",
+    head: "Parameter <code>v</code> now exists, with the value 0.0. The default is what fixes its type as a double.",
+    calc: "ros2 param list -> /talker:  v",
+    vars: [["parameters", [["v", "0.0", "double"], ["d", "-", "not declared yet"]]]],
+    ros: clone(alive), chips: [["cur", "1 parameter"]] });
+
+  declared.d = 0.0;
+  f.push({ line: L("talker", "declare_parameter('d'"), phase: 1, tag: "Part 2",
+    head: "And <code>d</code>. Both knobs are now visible from outside the node.",
+    calc: "ros2 param list -> /talker:  v, d",
+    vars: [["parameters", [["v", "0.0", "double"], ["d", "0.0", "double"]]]],
+    ros: clone(alive), chips: [["cur", "2 parameters"]] });
+
+  alive.drive = true;
+  f.push({ line: L("talker", "AckermannDriveStamped, 'drive', 10"), phase: 2, tag: "Part 2",
+    head: "The topic <code>/drive</code> appears in the graph the moment the publisher is created &mdash; before anything is sent on it.",
+    calc: "ros2 topic list -> /drive      (0 subscribers)",
+    vars: [["self", [["publisher", "drive", "queue depth 10"]]],
+           ["parameters", [["v", "0.0", ""], ["d", "0.0", ""]]]],
+    ros: clone(alive), chips: [["cur", "/drive advertised"], ["", "0 messages sent"]] });
+
+  f.push({ line: L("talker", "create_timer(0.001"), phase: 3, tag: "Part 2",
+    head: "From here on, ROS calls <code>publish_drive</code> roughly every millisecond. <code>__init__</code> is done.",
+    calc: "period 0.001 s  ->  about 1000 calls per second",
+    vars: [["self", [["publisher", "drive", ""], ["timer", "0.001 s", "-> publish_drive"]]],
+           ["parameters", [["v", "0.0", ""], ["d", "0.0", ""]]]],
+    ros: clone(alive), chips: [["cur", "timer armed"]] });
+
+  // The ticks. Three is enough to show the pattern; the third one is where the
+  // parameter change lands, so the preset that demonstrates it has somewhere
+  // to put the evidence.
+  var ticks = p.change ? 3 : 2;
+  var vNow = p.v, dNow = p.d, sent = 0;
+
+  for (var t = 1; t <= ticks; t++) {
+    var changedHere = (p.change && t === 3);
+    if (changedHere) {
+      f.push({ line: L("talker", "def publish_drive"), phase: 4, tag: "Part 2", event: true,
+        head: "Someone just ran <code>ros2 param set /talker v 4.0</code> in another terminal. The node was not restarted.",
+        calc: "parameter v: 1.0 -> 4.0   (set from outside)",
+        vars: [["parameters", [["v", "4.0", "just changed"], ["d", n1(dNow), ""]]],
+               ["published", [["messages", String(sent), ""]]]],
+        ros: clone(alive), msg: blankMsg(),
+        chips: [["cur", "param set v = 4.0"], ["", sent + " sent so far"]] });
+      vNow = p.change;
+    }
+
+    var msg = blankMsg();
+    f.push({ line: L("talker", "v = self.get_parameter"), phase: 4, tag: "Part 2",
+      head: "Tick " + t + ". <code>v</code> is read <em>now</em>, inside the callback" +
+            (changedHere ? " &mdash; which is the only reason the new value is about to be used." : "."),
+      calc: "v = " + n1(vNow) + "    (read from the parameter, not from __init__)",
+      vars: [["locals", [["v", n1(vNow), "just read", true], ["d", "-", "next line"]]],
+             ["parameters", [["v", n1(vNow), ""], ["d", n1(dNow), ""]]]],
+      ros: clone(alive), msg: clone(msg), tick: t,
+      chips: [["cur", "tick " + t], ["", sent + " sent so far"]] });
+
+    f.push({ line: L("talker", "d = self.get_parameter('d')"), phase: 4, tag: "Part 2",
+      head: "And the steering angle, the same way.",
+      calc: "d = " + n1(dNow),
+      vars: [["locals", [["v", n1(vNow), ""], ["d", n1(dNow), "just read", true]]],
+             ["parameters", [["v", n1(vNow), ""], ["d", n1(dNow), ""]]]],
+      ros: clone(alive), msg: clone(msg), tick: t,
+      chips: [["cur", "tick " + t], ["", sent + " sent so far"]] });
+
+    f.push({ line: L("talker", "msg = AckermannDriveStamped()"), phase: 5, tag: "Part 2",
+      head: "A fresh message. Every field is zero until you set it.",
+      calc: "msg.drive.speed = 0.0,  msg.drive.steering_angle = 0.0",
+      vars: [["locals", [["v", n1(vNow), ""], ["d", n1(dNow), ""], ["msg", "empty", "all fields 0.0"]]]],
+      ros: clone(alive), msg: { speed: 0, angle: 0 }, tick: t,
+      chips: [["cur", "tick " + t], ["", sent + " sent so far"]] });
+
+    f.push({ line: L("talker", "msg.drive.speed = v"), phase: 5, tag: "Part 2",
+      head: "Speed goes <em>inside</em> <code>.drive</code>. <code>msg.speed</code> would raise.",
+      calc: "msg.drive.speed = " + n1(vNow),
+      vars: [["locals", [["v", n1(vNow), ""], ["d", n1(dNow), ""], ["msg.drive.speed", n1(vNow), "just set", true]]]],
+      ros: clone(alive), msg: { speed: vNow, angle: 0, set: "speed" }, tick: t,
+      chips: [["cur", "tick " + t], ["", sent + " sent so far"]] });
+
+    f.push({ line: L("talker", "msg.drive.steering_angle = d"), phase: 5, tag: "Part 2",
+      head: "And the angle. The message is now complete.",
+      calc: "msg.drive.steering_angle = " + n1(dNow),
+      vars: [["locals", [["v", n1(vNow), ""], ["d", n1(dNow), ""],
+                         ["msg.drive.speed", n1(vNow), ""],
+                         ["msg.drive.steering_angle", n1(dNow), "just set", true]]]],
+      ros: clone(alive), msg: { speed: vNow, angle: dNow, set: "angle" }, tick: t,
+      chips: [["cur", "tick " + t], ["", sent + " sent so far"]] });
+
+    sent++;
+    f.push({ line: L("talker", "self.publisher.publish(msg)"), phase: 5, tag: "Part 2",
+      head: "On the wire. This is the first line in the file that anything outside this process can see.",
+      calc: "publish -> /drive   speed=" + n1(vNow) + "  steering_angle=" + n1(dNow),
+      vars: [["locals", [["msg.drive.speed", n1(vNow), ""], ["msg.drive.steering_angle", n1(dNow), ""]]],
+             ["published", [["messages", String(sent), "on /drive"]]]],
+      ros: clone(alive), msg: { speed: vNow, angle: dNow }, flight: "drive", tick: t,
+      chips: [["ok", "sent on /drive"], ["", sent + " total"]] });
+  }
+
+  f[f.length - 1].head = "On the wire &mdash; and the timer will do it all again in a millisecond. " +
+    (p.change ? "Note that the last message carries 4.0, with no restart." : "Same two numbers every time, until someone changes a parameter.");
+  return f;
+}
+
+function buildRelay(p) {
+  var f = [];
+  var alive = { talker: true, relay: false, drive: true, relay_t: false };
+  var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+
+  f.push({ line: L("relay", "super().__init__('relay')"), phase: 0, tag: "given",
+    head: "The second node. The talker is assumed to be already running, publishing on <code>/drive</code>.",
+    calc: "node name = /relay",
+    vars: [["self", [["node name", "relay", ""]]]],
+    ros: clone(alive), chips: [["cur", "/relay is up"], ["", "not connected yet"]] });
+
+  alive.relay_t = true;
+  f.push({ line: L("relay", "'drive_relay', 10"), phase: 1, tag: "Part 2",
+    head: "The output topic. <code>drive_relay</code>, not <code>drive</code> &mdash; publishing back onto the input would make the relay hear itself.",
+    calc: "ros2 topic list -> /drive, /drive_relay",
+    vars: [["self", [["publisher", "drive_relay", "queue depth 10"]]]],
+    ros: clone(alive), chips: [["cur", "/drive_relay advertised"]] });
+
+  alive.relay = true;
+  f.push({ line: L("relay", "self.drive_callback, 10"), phase: 2, tag: "Part 2",
+    head: "The chain closes. From here the relay runs whenever the talker publishes, and never otherwise.",
+    calc: "subscribe /drive  ->  self.drive_callback(msg)",
+    vars: [["self", [["publisher", "drive_relay", ""], ["subscription", "drive", "-> drive_callback"]]]],
+    ros: clone(alive), chips: [["ok", "talker -> relay connected"]] });
+
+  // Two messages through the callback. The second uses the other preset value
+  // so the 3x relation is visible on more than one number.
+  var pairs = [[p.v, p.d], [p.change || p.v * 2, p.d]];
+  var seen = 0;
+
+  for (var k = 0; k < pairs.length; k++) {
+    var inV = pairs[k][0], inD = pairs[k][1];
+    var outV = inV * 3, outD = inD * 3;
+    seen++;
+
+    f.push({ line: L("relay", "def drive_callback"), phase: 3, tag: "Part 2", event: true,
+      head: "A message arrived on <code>/drive</code>. ROS calls your callback and hands it in as <code>msg</code>.",
+      calc: "msg.drive.speed = " + n1(inV) + "   msg.drive.steering_angle = " + n1(inD),
+      vars: [["incoming", [["msg.drive.speed", n1(inV), "from the talker", true],
+                           ["msg.drive.steering_angle", n1(inD), "", true]]],
+             ["handled", [["messages", String(seen - 1), "so far"]]]],
+      ros: clone(alive), msg: { speed: inV, angle: inD }, flight: "drive",
+      chips: [["cur", "message " + seen + " in"], ["", (seen - 1) + " relayed"]] });
+
+    f.push({ line: L("relay", "out = AckermannDriveStamped()"), phase: 3, tag: "Part 2",
+      head: "A new message to send, rather than editing the one that arrived.",
+      calc: "out.drive.speed = 0.0,  out.drive.steering_angle = 0.0",
+      vars: [["incoming", [["msg.drive.speed", n1(inV), ""], ["msg.drive.steering_angle", n1(inD), ""]]],
+             ["outgoing", [["out", "empty", "all fields 0.0"]]]],
+      ros: clone(alive), msg: { speed: 0, angle: 0 },
+      chips: [["cur", "message " + seen + " in"]] });
+
+    f.push({ line: L("relay", "out.drive.speed = msg.drive.speed * 3.0"), phase: 3, tag: "Part 2",
+      head: "Three times the incoming speed.",
+      calc: n1(inV) + " * 3.0 = " + n1(outV),
+      vars: [["incoming", [["msg.drive.speed", n1(inV), ""], ["msg.drive.steering_angle", n1(inD), ""]]],
+             ["outgoing", [["out.drive.speed", n1(outV), "just set", true]]]],
+      ros: clone(alive), msg: { speed: outV, angle: 0, set: "speed" },
+      chips: [["cur", "message " + seen + " in"]] });
+
+    f.push({ line: L("relay", "out.drive.steering_angle = msg.drive.steering_angle * 3.0"), phase: 3, tag: "Part 2",
+      head: "And three times the angle. Both fields, or the check scores zero.",
+      calc: n1(inD) + " * 3.0 = " + n1(outD),
+      vars: [["incoming", [["msg.drive.speed", n1(inV), ""], ["msg.drive.steering_angle", n1(inD), ""]]],
+             ["outgoing", [["out.drive.speed", n1(outV), ""], ["out.drive.steering_angle", n1(outD), "just set", true]]]],
+      ros: clone(alive), msg: { speed: outV, angle: outD, set: "angle" },
+      chips: [["cur", "message " + seen + " in"]] });
+
+    f.push({ line: L("relay", "self.publisher.publish(out)"), phase: 4, tag: "Part 2",
+      head: "Out on <code>/drive_relay</code>. One message in, one message out &mdash; the relay has no timer of its own.",
+      calc: "publish -> /drive_relay   speed=" + n1(outV) + "  steering_angle=" + n1(outD),
+      vars: [["outgoing", [["out.drive.speed", n1(outV), ""], ["out.drive.steering_angle", n1(outD), ""]]],
+             ["handled", [["messages", String(seen), "relayed"]]]],
+      ros: clone(alive), msg: { speed: outV, angle: outD }, flight: "relay",
+      chips: [["ok", "sent on /drive_relay"], ["", n1(inV) + " in -> " + n1(outV) + " out"]] });
+  }
+
+  return f;
+}
+
+function buildLaunch(p) {
+  var f = [];
+  var alive = { talker: false, relay: false, drive: false, relay_t: false };
+  var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+
+  f.push({ line: L("launch", "return LaunchDescription(["), phase: 0, tag: "Part 3",
+    file: "lab1_pkg/launch/lab1_launch.py",
+    head: "A launch file <em>returns a description</em> of what to start. Nothing has been started by this line.",
+    calc: "generate_launch_description() -> LaunchDescription([...])",
+    vars: [["description", [["actions", "0", "being built"]]]],
+    ros: clone(alive), chips: [["", "nothing running"]] });
+
+  f.push({ line: L("launch", "executable='talker'"), phase: 1, tag: "Part 3",
+    file: "lab1_pkg/launch/lab1_launch.py",
+    head: "The same two words <code>ros2 run lab1_pkg talker</code> takes, written as a dict. The name comes from <code>setup.py</code>.",
+    calc: "package='lab1_pkg'  executable='talker'   (from console_scripts)",
+    vars: [["action 1", [["package", "lab1_pkg", ""], ["executable", "talker", ""]]]],
+    ros: clone(alive), chips: [["", "still only a description"]] });
+
+  f.push({ line: L("launch", "parameters=[{'v': 1.0, 'd': 0.0}]"), phase: 1, tag: "Part 3",
+    file: "lab1_pkg/launch/lab1_launch.py",
+    head: "The talker's knobs, set at startup. A list of dicts, and the values must be floats.",
+    calc: "v = " + n1(p.v) + "   d = " + n1(p.d) + "    (set before the node starts)",
+    vars: [["action 1", [["package", "lab1_pkg", ""], ["executable", "talker", ""],
+                         ["parameters", "v, d", "as floats"]]]],
+    ros: clone(alive), chips: [["", "still only a description"]] });
+
+  f.push({ line: L("launch", "executable='relay'"), phase: 2, tag: "Part 3",
+    file: "lab1_pkg/launch/lab1_launch.py",
+    head: "The relay needs no parameters, so the action is two lines shorter.",
+    calc: "package='lab1_pkg'  executable='relay'",
+    vars: [["action 1", [["executable", "talker", "with v, d"]]],
+           ["action 2", [["executable", "relay", "no parameters"]]]],
+    ros: clone(alive), chips: [["", "2 actions described"]] });
+
+  alive = { talker: true, relay: true, drive: true, relay_t: true };
+  f.push({ line: L("launch", "])"), phase: 3, tag: "Part 3",
+    file: "lab1_pkg/launch/lab1_launch.py",
+    head: "<code>ros2 launch</code> takes the returned description and starts both processes. The whole graph in one command.",
+    calc: "ros2 launch lab1_pkg lab1_launch.py  ->  /talker and /relay, v=" + n1(p.v) + " d=" + n1(p.d),
+    vars: [["running", [["/talker", "up", "v = " + n1(p.v) + ", d = " + n1(p.d)],
+                        ["/relay", "up", "listening on /drive"]]]],
+    ros: clone(alive), msg: { speed: p.v, angle: p.d }, flight: "both",
+    chips: [["ok", "both nodes up"], ["ok", "one command"]] });
+
+  return f;
+}
+
+function buildCli(p) {
+  var f = [];
+  var up = { talker: true, relay: true, drive: true, relay_t: true };
+  var down = { talker: false, relay: false, drive: false, relay_t: false };
+  var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+  var v = p.v, d = p.d;
+
+  f.push({ line: L("cli", "colcon build"), phase: 0, tag: "every change",
+    file: "~/sim_ws", head: "Builds the package. Run it from the workspace root, not from inside <code>src</code>.",
+    calc: "Summary: 1 package finished",
+    vars: [["workspace", [["lab1_pkg", "built", ""]]]],
+    ros: clone(down), chips: [["", "nothing running"]] });
+
+  f.push({ line: L("cli", "source install/setup.bash"), phase: 0, tag: "every terminal",
+    file: "~/sim_ws", head: "Puts the freshly built executables on the path. Every new terminal needs this, and so does every rebuild.",
+    calc: "ros2 run lab1_pkg <TAB>  ->  relay  talker",
+    vars: [["workspace", [["lab1_pkg", "built", ""], ["overlay", "sourced", ""]]]],
+    ros: clone(down), chips: [["", "nothing running"]] });
+
+  f.push({ line: L("cli", "ros2 launch"), phase: 1, tag: "Part 3",
+    file: "terminal 1", head: "Both nodes come up. Leave this running; everything below happens in a second terminal.",
+    calc: "[INFO] process started: talker   [INFO] process started: relay",
+    vars: [["running", [["/talker", "up", ""], ["/relay", "up", ""]]]],
+    ros: clone(up), chips: [["ok", "2 nodes"]] });
+
+  f.push({ line: L("cli", "ros2 node list"), phase: 2, tag: "check",
+    file: "terminal 2", head: "The names come from <code>super().__init__('talker')</code>, not from the file names.",
+    calc: "/relay\n/talker",
+    vars: [["nodes", [["/talker", "seen", ""], ["/relay", "seen", ""]]]],
+    ros: clone(up), chips: [["ok", "2 nodes"]] });
+
+  f.push({ line: L("cli", "ros2 topic list"), phase: 2, tag: "check",
+    file: "terminal 2", head: "Both topics exist. <code>/drive</code> came from the talker's publisher, <code>/drive_relay</code> from the relay's.",
+    calc: "/drive\n/drive_relay\n/parameter_events\n/rosout",
+    vars: [["topics", [["/drive", "seen", "talker -> relay"], ["/drive_relay", "seen", "relay -> you"]]]],
+    ros: clone(up), chips: [["ok", "2 topics"], ["", "plus the 2 ROS always makes"]] });
+
+  f.push({ line: L("cli", "echo /drive --once"), phase: 3, tag: "check",
+    file: "terminal 2", head: "What the talker is sending: the parameter values, straight through.",
+    calc: "drive:\n  steering_angle: " + n1(d) + "\n  speed: " + n1(v),
+    vars: [["/drive", [["speed", n1(v), "= v", true], ["steering_angle", n1(d), "= d", true]]]],
+    ros: clone(up), msg: { speed: v, angle: d }, flight: "drive",
+    chips: [["cur", "speed " + n1(v)]] });
+
+  f.push({ line: L("cli", "echo /drive_relay --once"), phase: 3, tag: "check",
+    file: "terminal 2", head: "And what the relay made of it. Three times both numbers &mdash; this is the one check you can do by eye.",
+    calc: "drive:\n  steering_angle: " + n1(d * 3) + "\n  speed: " + n1(v * 3) + "     (" + n1(v) + " * 3)",
+    vars: [["/drive", [["speed", n1(v), ""], ["steering_angle", n1(d), ""]]],
+           ["/drive_relay", [["speed", n1(v * 3), "3x", true], ["steering_angle", n1(d * 3), "3x", true]]]],
+    ros: clone(up), msg: { speed: v * 3, angle: d * 3 }, flight: "relay",
+    chips: [["ok", n1(v) + " -> " + n1(v * 3)]] });
+
+  f.push({ line: L("cli", "ros2 param set"), phase: 4, tag: "Part 2",
+    file: "terminal 2", head: "Turn the knob while the node runs. If your talker read its parameters in <code>__init__</code>, nothing downstream changes &mdash; that is the 5-point check.",
+    calc: "Set parameter successful\n/drive now carries speed: 2.0,  /drive_relay carries 6.0",
+    vars: [["/talker param", [["v", "2.0", "changed live", true]]],
+           ["/drive", [["speed", "2.0", "", true]]],
+           ["/drive_relay", [["speed", "6.0", "3x", true]]]],
+    ros: clone(up), msg: { speed: 6, angle: d * 3 }, flight: "both",
+    chips: [["ok", "param change took effect"]] });
+
+  f.push({ line: L("cli", "ros2 topic hz /drive"), phase: 5, tag: "check",
+    file: "terminal 2", head: "The timer asked for 1000 Hz. What you actually get is lower, and the gap is worth noticing.",
+    calc: "average rate: 1000.0 asked  ->  typically a few hundred, varies by machine",
+    vars: [["/drive", [["asked", "1000 Hz", "timer 0.001 s"], ["measured", "lower", "a timer is a request"]]]],
+    ros: clone(up), chips: [["cur", "rate measured"]] });
+
+  f.push({ line: L("cli", "rqt_graph"), phase: 5, tag: "Part 3",
+    file: "terminal 2", head: "The picture Part 3 asks you to submit: two ovals, two boxes, arrows left to right.",
+    calc: "/talker -> /drive -> /relay -> /drive_relay",
+    vars: [["screenshot", [["nodes", "2", "talker, relay"], ["topics", "2", "drive, drive_relay"]]]],
+    ros: clone(up), msg: { speed: v, angle: d }, flight: "both",
+    chips: [["ok", "ready to screenshot"]] });
+
+  return f;
+}
+
+// ---------------------------------------------------------------------------
+// What the checker does, so "what is graded" is the grader's own table rather
+// than a summary of it.
+// ---------------------------------------------------------------------------
+var GRADED = [
+  ["part", "Part 1: Package", "", ""],
+  ["", "package.xml declares ackermann_msgs", "10", "Parses your <code>package.xml</code> and looks for the dependency."],
+  ["", "talker and relay executables are registered", "15", "Runs <code>ros2 run lab1_pkg talker</code> and <code>relay</code> and checks both start."],
+  ["part", "Part 2: Nodes", "", ""],
+  ["", "talker publishes v and d on <code>drive</code>", "10", "Subscribes to <code>drive</code> and compares what arrives against the parameters it set."],
+  ["", "talker picks up a parameter change", "5", "Calls <code>ros2 param set</code> and waits for the published value to follow. Reading parameters in <code>__init__</code> fails here and only here."],
+  ["", "relay publishes 3x the command on <code>drive_relay</code>", "10", "Publishes a known command on <code>drive</code> itself and checks <code>drive_relay</code> for exactly 3x, both fields."],
+  ["part", "Part 3: Launch file", "", ""],
+  ["", "lab1_launch.py is installed", "10", "Looks for it under <code>share/lab1_pkg/launch</code> &mdash; the <code>data_files</code> line in setup.py."],
+  ["", "lab1_launch.py starts both nodes", "15", "Launches it and checks both nodes appear and both topics carry traffic."]
+];
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+var MODES = ["pkg", "talker", "relay", "launch", "cli", "graded"];
+var state = { mode: MODES[0], preset: "slow", step: 0, pinned: null, peek: null,
+              frames: [], timer: null, mh: null };
+
+function buildFrames() {
+  var p = PRESETS[state.preset];
+  if (state.mode === "pkg")    state.frames = buildPkg();
+  if (state.mode === "talker") state.frames = buildTalker(p);
+  if (state.mode === "relay")  state.frames = buildRelay(p);
+  if (state.mode === "launch") state.frames = buildLaunch(p);
+  if (state.mode === "cli")    state.frames = buildCli(p);
+  if (state.mode === "graded") state.frames = [];
+  if (state.step > state.frames.length - 1) state.step = Math.max(0, state.frames.length - 1);
+}
+
+function frame() { return state.frames[Math.min(state.step, state.frames.length - 1)]; }
+
+// ---------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Python keywords that actually appear in these panes, plus the handful of
+// shell words the CLI pane needs. Coloring every identifier is noise; the eye
+// is looking for structure.
+var HL_KW = ("and as assert async await break class continue def del elif else except False " +
+             "finally for from global if import in is lambda None nonlocal not or pass raise " +
+             "return self True try while with yield").split(" ");
+
+function hl(raw, key) {
+  // The CLI pane is a terminal, not Python: the prompt and the command are the
+  // structure worth coloring, and the Python rules would mangle flags.
+  if (key === "cli") {
+    if (raw.charAt(0) !== "$") return raw === "" ? "" : '<span class="cm">' + esc(raw) + "</span>";
+    var m = /^\$\s+(\S+)\s*(.*)$/.exec(raw);
+    if (!m) return esc(raw);
+    return '<span class="cm">$</span> <span class="fn">' + esc(m[1]) + "</span>" +
+           (m[2] ? " " + esc(m[2]) : "");
+  }
+  // The package pane holds XML as well as Python; tags are the structure there.
+  if (key === "pkg" && /^\s*</.test(raw)) {
+    return esc(raw).replace(/&lt;(\/?[\w\-]+)/g, '&lt;<span class="kw">$1</span>')
+                   .replace(/&lt;!--[\s\S]*--&gt;/g, function (c) { return '<span class="cm">' + c + "</span>"; });
+  }
+  var cut = raw.indexOf("#");
+  var code = cut === -1 ? raw : raw.slice(0, cut);
+  var note = cut === -1 ? "" : raw.slice(cut);
+
+  var out = "";
+  var re = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)|([\s\S]?)/g;
+  var m2;
+  while ((m2 = re.exec(code)) !== null) {
+    if (m2[0] === "") { re.lastIndex++; continue; }
+    if (m2[1]) { out += '<span class="st">' + esc(m2[1]) + "</span>"; continue; }
+    if (m2[2]) { out += '<span class="nm">' + esc(m2[2]) + "</span>"; continue; }
+    if (m2[3]) {
+      if (HL_KW.indexOf(m2[3]) !== -1) out += '<span class="kw">' + esc(m2[3]) + "</span>";
+      else if (code.charAt(re.lastIndex) === "(") out += '<span class="fn">' + esc(m2[3]) + "</span>";
+      else out += esc(m2[3]);
+      continue;
+    }
+    out += esc(m2[4]);
+  }
+  return out + (note ? '<span class="cm">' + esc(note) + "</span>" : "");
+}
+
+function codeHtml(key, f) {
+  var fileLabel = f.file || DEFAULT_FILE[key];
+  return '<p class="filename">' + (fileLabel ? "<b>" + esc(fileLabel) + "</b>" : "") + "</p>" +
+    '<div class="code" id="code">' + CODE[key].map(function (ln, i) {
+      var cls = [];
+      if (i === f.line) cls.push("hit");
+      if (state.pinned === i) cls.push("pin");
+      var t = hl(ln, key);
+      return '<div data-line="' + i + '"' + (cls.length ? ' class="' + cls.join(" ") + '"' : "") +
+             ' tabindex="0">' + (t === "" ? "&nbsp;" : t) + "</div>" +
+             (i === f.line && f.calc
+                ? '<div class="calc"><span class="cv">' + esc(f.calc) + "</span></div>"
+                : "");
+    }).join("") + "</div>" + lineInfoHtml(key);
+}
+
+var DEFAULT_FILE = {
+  pkg: "lab1_pkg/package.xml",
+  talker: "lab1_pkg/lab1_pkg/talker.py",
+  relay: "lab1_pkg/lab1_pkg/relay.py",
+  launch: "lab1_pkg/launch/lab1_launch.py",
+  cli: "terminal"
+};
+
+function lineInfoHtml(key) {
+  var info = LINE_INFO[key] && LINE_INFO[key][state.pinned];
+  if (!info) {
+    var n = Object.keys(LINE_INFO[key] || {}).length;
+    return '<p class="hint">Click a line for what it is for and what goes wrong without it &mdash; ' +
+           n + " of these lines have one.</p>";
+  }
+  return '<div class="lineinfo"><span class="close">click again to close</span><h4>' +
+    esc(info.src) + "</h4><p style='margin:0'>" + info.what + "</p><ul class='li-items'>" +
+    info.items.map(function (it) {
+      return '<li><span class="li-kind k-' + it[0] + '">' + it[0] + "</span>" + it[1] + "</li>";
+    }).join("") + "</ul></div>";
+}
+
+// The variables, as the names the code uses and the values they hold right
+// now. Everything here is read off the frame, so it is what the program would
+// actually be holding at the highlighted line.
+function localsHtml(f) {
+  if (!f.vars) return '<p class="hint">Nothing in scope yet.</p>';
+  return f.vars.map(function (g) {
+    return '<div class="lgroup"><h5>' + esc(g[0]) + "</h5>" + g[1].map(function (v) {
+      return '<div class="lv"><span class="ln">' + esc(v[0]) + "</span>" +
+        '<span class="lval' + (v[1] === "-" ? " pend" : (v[3] ? " hot" : "")) + '">' + esc(v[1]) + "</span>" +
+        (v[2] ? '<span class="lat">' + v[2] + "</span>" : "") + "</div>";
+    }).join("") + "</div>";
+  }).join("");
+}
+
+// The ROS graph: boxes are nodes, pills are topics. Dim means the line that
+// creates it has not run yet, so the picture grows with the walk.
+function rosSvg(f) {
+  var a = f.ros || {};
+  var on = function (b) { return b ? { s: "#1c7e45", fi: "#f2fbf4", t: "#1c7e45" }
+                                   : { s: "#b9c3cd", fi: "#fbfcfd", t: "#9aa7b4" }; };
+  var hotDrive = f.flight === "drive" || f.flight === "both";
+  var hotRelay = f.flight === "relay" || f.flight === "both";
+  var nodeBox = function (x, y, label, live) {
+    var c = on(live);
+    return '<rect x="' + x + '" y="' + y + '" width="104" height="38" rx="8" fill="' + c.fi +
+      '" stroke="' + c.s + '" stroke-width="2"/>' +
+      '<text x="' + (x + 52) + '" y="' + (y + 24) + '" text-anchor="middle" fill="' + c.t +
+      '" class="mono">' + label + "</text>";
+  };
+  var topicPill = function (x, y, label, live, hot) {
+    var c = live ? (hot ? { s: "#a95c19", fi: "#fff3e0", t: "#a95c19" } : on(true)) : on(false);
+    return '<rect x="' + x + '" y="' + y + '" width="118" height="30" rx="15" fill="' + c.fi +
+      '" stroke="' + c.s + '" stroke-width="2"' + (hot ? "" : ' stroke-dasharray="4 3"') + "/>" +
+      '<text x="' + (x + 59) + '" y="' + (y + 20) + '" text-anchor="middle" fill="' + c.t +
+      '" class="mono">' + label + "</text>";
+  };
+  var arrow = function (x1, x2, y, live, hot) {
+    var c = live ? (hot ? "#a95c19" : "#1c7e45") : "#cfd6de";
+    return '<line x1="' + x1 + '" y1="' + y + '" x2="' + x2 + '" y2="' + y + '" stroke="' + c +
+      '" stroke-width="' + (hot ? 3 : 2) + '" marker-end="url(#ah' + (hot ? "h" : live ? "l" : "d") + ')"/>';
+  };
+
+  return '<svg class="gr" viewBox="0 0 560 150" role="img" aria-label="the ROS 2 graph at this step">' +
+    '<defs>' +
+    ['ahh:#a95c19', 'ahl:#1c7e45', 'ahd:#cfd6de'].map(function (d) {
+      var p = d.split(":");
+      return '<marker id="' + p[0] + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" ' +
+        'markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="' + p[1] + '"/></marker>';
+    }).join("") + "</defs>" +
+    nodeBox(4, 46, "/talker", a.talker) +
+    arrow(110, 150, 65, a.drive, hotDrive) +
+    topicPill(152, 50, "/drive", a.drive, hotDrive) +
+    arrow(272, 310, 65, a.relay, hotDrive) +
+    nodeBox(312, 46, "/relay", a.relay) +
+    arrow(418, 452, 65, a.relay_t, hotRelay) +
+    '<text x="280" y="128" text-anchor="middle" class="sub">' +
+      (a.relay_t ? "/drive_relay continues to anything that subscribes" : "") + "</text>" +
+    topicPill(440, 50, "/drive_relay", a.relay_t, hotRelay) +
+    "</svg>";
+}
+
+// The message under construction, field by field. Showing it as a struct is
+// the point: the two numbers the lab cares about live one level down.
+function msgHtml(f) {
+  if (!f.msg) {
+    return '<div class="msgbox"><h5>AckermannDriveStamped</h5><table><tr><td class="none" colspan="2">' +
+           "no message in scope at this line</td></tr></table></div>";
+  }
+  var row = function (name, val, isSet) {
+    return '<tr' + (isSet ? ' class="set"' : "") + "><td>" + name + '</td><td class="v">' +
+      (val === null ? "&mdash;" : n1(val)) + "</td></tr>";
+  };
+  return '<div class="msgbox"><h5>AckermannDriveStamped</h5><table>' +
+    '<tr><td>header.stamp</td><td class="v">unset</td></tr>' +
+    row("drive.speed", f.msg.speed, f.msg.set === "speed") +
+    row("drive.steering_angle", f.msg.angle, f.msg.set === "angle") +
+    '<tr><td>drive.acceleration</td><td class="v">0.0</td></tr>' +
+    "</table></div>";
+}
+
+function chipsHtml(f) {
+  if (!f.chips) return '<div class="chips"></div>';
+  return '<div class="chips">' + f.chips.map(function (c) {
+    return '<span class="chip' + (c[0] ? " " + c[0] : "") + '">' + c[1] + "</span>";
+  }).join("") + "</div>";
+}
+
+function nowBox(f) {
+  return '<div class="nowbox"><p class="nownote">' + f.head + "</p></div>" +
+    (f.note ? '<ul class="why"><li>' + f.note + "</li></ul>" : "");
+}
+
+function railHtml(f) {
+  var g = GUIDE[state.mode];
+  if (!g) return "";
+  return '<div class="card rail"><h2>Where we are</h2><div class="card-body">' +
+    (f.tag ? '<p class="rlab">this step</p><p class="rnow">' + esc(f.tag) + "</p>" : "") +
+    '<p class="rlab">' + g.where + "</p><ol>" +
+    g.steps.map(function (st, i) {
+      var open = state.peek === i;
+      return '<li class="' + (i === f.phase ? "on" : "") + '" data-step="' + i + '" ' +
+        'role="button" tabindex="0"><span class="rt"><span class="rn">' + (i + 1) +
+        "</span><span>" + st.t + "</span></span>" +
+        (open ? "<ul>" + st.b.map(function (b) { return "<li>" + b + "</li>"; }).join("") + "</ul>" : "") +
+        "</li>";
+    }).join("") + "</ol></div></div>";
+}
+
+function factsHtml() {
+  var fs = FACTS[state.mode];
+  if (!fs) return "";
+  return '<dl class="facts">' + fs.map(function (p) {
+    return "<dt>" + p[0] + "</dt><dd>" + p[1] + "</dd>";
+  }).join("") + "</dl>";
+}
+
+function todoBarHtml(f) {
+  var given = f.tag === "given" || f.tag === "check" || f.tag === "every change" || f.tag === "every terminal";
+  return '<div class="todobar' + (given ? " bg" : "") + '"><span class="tag">' +
+    (given ? "ALREADY DONE" : "YOUR CODE") + '</span><span class="what">' +
+    (given ? "This line is in the skeleton, or is a command you run &mdash; nothing to write here."
+           : "This line is one of the <code>TODO</code>s in " + esc(f.file || DEFAULT_FILE[state.mode]) +
+             " (" + esc(f.tag) + ").") + "</span></div>";
+}
+
+function soloHtml(f) {
+  var mh = state.mh || {};
+  var fix = function (n) { return mh[n] ? ' style="min-height:' + mh[n] + 'px"' : ""; };
+  return '<div class="solo"><div class="col">' +
+      '<div class="card"><h2>The code</h2><div class="card-body"' + fix("code") + ">" +
+        codeHtml(state.mode, f) + "</div></div>" +
+      (FACTS[state.mode] ? '<div class="card"><h2>The numbers that matter</h2><div class="card-body">' +
+        factsHtml() + "</div></div>" : "") +
+    '</div><div class="col">' +
+      '<div class="card"><h2>The graph, right now</h2><div class="card-body"' + fix("pic") + ">" +
+        rosSvg(f) + msgHtml(f) + chipsHtml(f) + "</div></div>" +
+      '<div class="card"><h2>What just happened</h2><div class="card-body"' + fix("says") + ">" +
+        nowBox(f) + "</div></div>" +
+    '</div><div class="col railcol">' + railHtml(f) +
+      '<div class="card"><h2>What the program is holding</h2><div class="card-body"' +
+        fix("locals") + ">" + localsHtml(f) + "</div></div>" +
+    "</div></div>";
+}
+
+function gradedHtml() {
+  var total = GRADED.reduce(function (s, r) { return s + (r[2] ? +r[2] : 0); }, 0);
+  return '<div class="solo" style="grid-template-columns:1.3fr .7fr">' +
+    '<div class="col"><div class="card"><h2>check_lab1.py, check by check</h2><div class="card-body">' +
+    '<table class="v"><tr><th>Check</th><th class="pts">Pts</th><th>What it actually does</th></tr>' +
+    GRADED.map(function (r) {
+      if (r[0] === "part") return '<tr class="part"><td colspan="3">' + r[1] + "</td></tr>";
+      return "<tr><td>" + r[1] + '</td><td class="pts">' + r[2] + "</td><td>" + r[3] + "</td></tr>";
+    }).join("") +
+    '<tr class="part"><td>Autograded total</td><td class="pts">' + total + "</td><td></td></tr>" +
+    "</table></div></div></div>" +
+    '<div class="col"><div class="card"><h2>And the rest</h2><div class="card-body">' +
+    '<div class="verdict"><p><b>' + total + " points</b> come from the table on the left. " +
+    "Run it yourself with <code class='inl'>python3 tests/check_lab1.py</code> &mdash; it starts " +
+    "your nodes, so stop any talker, relay, or launch file you have running first.</p>" +
+    "<p><b>25 points</b> are the written questions in <code class='inl'>SUBMISSION.md</code>, " +
+    "graded by hand. The checker never opens that file.</p>" +
+    "<p>The checker puts itself on a random <code class='inl'>ROS_DOMAIN_ID</code> with " +
+    "<code class='inl'>ROS_LOCALHOST_ONLY=1</code>, so a classmate's nodes on the same network " +
+    "cannot reach the topics it is watching. Yours cannot either, which is why it has to start them itself.</p>" +
+    "</div></div></div></div></div>";
+}
+
+// Reserve the tallest each panel reaches across the whole walk, so stepping
+// does not make the page jump. Cheap enough to redo on every mode, preset or
+// resize change, and nowhere near a per-step cost.
+function measureRun() {
+  state.mh = null;
+  if (state.mode === "graded") return;
+  var stage = document.getElementById("stage");
+  if (!stage.offsetWidth || !state.frames.length) return;
+
+  var ghost = document.createElement("div");
+  ghost.style.cssText = "position:absolute;left:-99999px;top:0;visibility:hidden;width:" +
+                        stage.offsetWidth + "px";
+  document.body.appendChild(ghost);
+
+  var max = { code: 0, pic: 0, says: 0, locals: 0 };
+  var savedPin = state.pinned;
+  state.pinned = null;                   // a pinned popup is not part of the walk
+  state.frames.forEach(function (f) {
+    ghost.innerHTML = soloHtml(f);
+    var cols = ghost.querySelectorAll(".col");
+    if (cols.length < 3) return;         // markup changed; reserve nothing rather than throw
+    var h = function (card) {
+      var body = card && card.querySelector(".card-body");
+      return body ? body.offsetHeight : 0;
+    };
+    max.code   = Math.max(max.code,   h(cols[0].children[0]));
+    max.pic    = Math.max(max.pic,    h(cols[1].children[0]));
+    max.says   = Math.max(max.says,   h(cols[1].children[1]));
+    max.locals = Math.max(max.locals, h(cols[2].children[1]));
+  });
+  state.pinned = savedPin;
+
+  document.body.removeChild(ghost);
+  state.mh = max;
+}
+
+function render() {
+  var stage = document.getElementById("stage");
+
+  Array.prototype.forEach.call(document.querySelectorAll("#tabs button"), function (b) {
+    b.classList.toggle("on", b.getAttribute("data-mode") === state.mode);
+  });
+
+  var w = WHATIS[state.mode];
+  document.getElementById("whatis").innerHTML = w
+    ? "<dl><dt>" + w.a[0] + "</dt><dd>" + w.a[1] + "</dd><dt>" + w.b[0] + "</dt><dd>" + w.b[1] +
+      '</dd><div class="both">' + w.both + "</div></dl>"
+    : "";
+
+  renderPresets();
+
+  if (state.mode === "graded") {
+    stage.innerHTML = gradedHtml();
+    document.getElementById("frameCount").textContent = "";
+    document.getElementById("legend").innerHTML = "";
+    setControls(false);
+    return;
+  }
+
+  var f = frame();
+  stage.innerHTML = todoBarHtml(f) + soloHtml(f);
+  document.getElementById("frameCount").textContent =
+    "step " + (state.step + 1) + " of " + state.frames.length;
+  document.getElementById("legend").innerHTML =
+    '<span><i class="sw" style="border-color:#1c7e45;background:#f2fbf4"></i>created, and part of the graph</span>' +
+    '<span><i class="sw" style="border-color:#b9c3cd;background:#fbfcfd"></i>the line that makes it has not run yet</span>' +
+    '<span><i class="sw" style="border-color:#a95c19;background:#fff3e0"></i>carrying a message at this step</span>' +
+    '<span>yellow band under the code = the live values for the line executing</span>';
+  setControls(true);
+  wireCode();
+  wireRail();
+}
+
+function setControls(live) {
+  ["first", "prev", "play", "next", "last"].forEach(function (id) {
+    document.getElementById(id).disabled = !live;
+  });
+  if (!live) return;
+  document.getElementById("first").disabled = state.step === 0;
+  document.getElementById("prev").disabled = state.step === 0;
+  document.getElementById("next").disabled = state.step >= state.frames.length - 1;
+  document.getElementById("last").disabled = state.step >= state.frames.length - 1;
+}
+
+function renderPresets() {
+  var row = document.getElementById("presetRow");
+  if (state.mode === "pkg" || state.mode === "graded") { row.innerHTML = ""; return; }
+  row.innerHTML = '<span class="lbl">Parameters</span>' +
+    Object.keys(PRESETS).map(function (k) {
+      return '<button class="ctl' + (state.preset === k ? " on" : "") + '" data-preset="' + k +
+        '">' + PRESETS[k].label + "</button>";
+    }).join("") +
+    '<span class="count">the only thing in Lab 1 you can change without editing code</span>';
+  Array.prototype.forEach.call(row.querySelectorAll("[data-preset]"), function (b) {
+    b.addEventListener("click", function () {
+      stopPlay();
+      state.preset = b.getAttribute("data-preset");
+      state.step = 0; state.pinned = null;
+      buildFrames(); measureRun(); render();
+    });
+  });
+}
+
+function wireCode() {
+  var code = document.getElementById("code");
+  if (!code) return;
+  Array.prototype.forEach.call(code.children, function (d) {
+    if (!d.hasAttribute("data-line")) return;
+    var hit = function () {
+      var n = parseInt(d.getAttribute("data-line"), 10);
+      state.pinned = (state.pinned === n) ? null : n;
+      render();
+    };
+    d.addEventListener("click", hit);
+    d.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hit(); }
+    });
+  });
+}
+
+function wireRail() {
+  Array.prototype.forEach.call(document.querySelectorAll(".rail [data-step]"), function (d) {
+    var n = +d.getAttribute("data-step");
+    var hit = function () { state.peek = state.peek === n ? null : n; render(); };
+    d.addEventListener("click", hit);
+    d.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hit(); }
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Stepping
+// ---------------------------------------------------------------------------
+function go(i) {
+  state.step = Math.max(0, Math.min(i, state.frames.length - 1));
+  render();
+}
+
+function stopPlay() {
+  if (state.timer) { clearInterval(state.timer); state.timer = null; }
+  var b = document.getElementById("play");
+  if (b) b.innerHTML = "&#9654; Play";
+}
+
+function togglePlay() {
+  if (state.mode === "graded") return;
+  if (state.timer) { stopPlay(); return; }
+  if (state.step >= state.frames.length - 1) state.step = 0;
+  document.getElementById("play").innerHTML = "&#9208; Pause";
+  state.timer = setInterval(function () {
+    if (state.step >= state.frames.length - 1) { stopPlay(); return; }
+    go(state.step + 1);
+  }, 1400);
+}
+
+function setMode(m) {
+  stopPlay();
+  state.mode = m; state.step = 0; state.pinned = null; state.peek = null;
+  buildFrames(); measureRun(); render();
+  if (location.hash.replace("#", "") !== m) history.replaceState(null, "", "#" + m);
+}
+
+Array.prototype.forEach.call(document.querySelectorAll("#tabs button"), function (b) {
+  b.addEventListener("click", function () { setMode(b.getAttribute("data-mode")); });
+});
+document.getElementById("first").addEventListener("click", function () { stopPlay(); go(0); });
+document.getElementById("prev").addEventListener("click", function () { stopPlay(); go(state.step - 1); });
+document.getElementById("next").addEventListener("click", function () { stopPlay(); go(state.step + 1); });
+document.getElementById("last").addEventListener("click", function () { stopPlay(); go(state.frames.length - 1); });
+document.getElementById("play").addEventListener("click", togglePlay);
+
+document.addEventListener("keydown", function (e) {
+  var t = e.target.tagName;
+  if (t === "INPUT" || t === "TEXTAREA") return;
+  if (e.key === "ArrowRight") { e.preventDefault(); stopPlay(); go(state.step + 1); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); stopPlay(); go(state.step - 1); }
+  else if (e.key === " ") { e.preventDefault(); togglePlay(); }
+  else if (e.key === "Home") { e.preventDefault(); stopPlay(); go(0); }
+  else if (e.key === "End") { e.preventDefault(); stopPlay(); go(state.frames.length - 1); }
+});
+
+var rt = null;
+window.addEventListener("resize", function () {
+  clearTimeout(rt);
+  rt = setTimeout(function () { measureRun(); render(); }, 150);
+});
+
+// Deep links: lab1.html#relay opens that tab, so a Canvas page or a lecture
+// slide can point at one walk instead of "then click tab 3".
+window.addEventListener("hashchange", function () {
+  var h = location.hash.replace("#", "");
+  if (MODES.indexOf(h) !== -1 && h !== state.mode) setMode(h);
+});
+
+// ---------------------------------------------------------------------------
+// Self-check. The walks are generated, so the invariants that matter are
+// checkable: every frame points at a real line, every rail phase exists, and
+// the arithmetic the page shows is the arithmetic the grader checks.
+// ---------------------------------------------------------------------------
+(function selfTest() {
+  var fails = [];
+  var walks = 0;
+
+  Object.keys(PRESETS).forEach(function (pk) {
+    var p = PRESETS[pk];
+    [["pkg", buildPkg], ["talker", buildTalker], ["relay", buildRelay],
+     ["launch", buildLaunch], ["cli", buildCli]].forEach(function (pair) {
+      var key = pair[0], frames = pair[1](p);
+      walks++;
+      if (!frames.length) fails.push(key + " produced no frames");
+      frames.forEach(function (f, i) {
+        if (typeof f.line !== "number" || f.line < 0 || f.line >= CODE[key].length)
+          fails.push(key + " step " + (i + 1) + " points outside the pane");
+        if (!f.head) fails.push(key + " step " + (i + 1) + " has no sentence");
+        var g = GUIDE[key];
+        if (g && (f.phase === undefined || f.phase >= g.steps.length))
+          fails.push(key + " step " + (i + 1) + " has no rail entry");
+      });
+    });
+
+    // The relay's output is what the grader compares, so check the numbers the
+    // page prints rather than trusting that they were typed in correctly.
+    var rel = buildRelay(p);
+    rel.forEach(function (f) {
+      if (f.vars) f.vars.forEach(function (g) {
+        if (g[0] !== "outgoing") return;
+        g[1].forEach(function (v) {
+          if (v[0] !== "out.drive.speed") return;
+          var inSpeed = null;
+          (f.vars || []).forEach(function (g2) {
+            if (g2[0] === "incoming") g2[1].forEach(function (v2) {
+              if (v2[0] === "msg.drive.speed") inSpeed = parseFloat(v2[1]);
+            });
+          });
+          if (inSpeed !== null && Math.abs(parseFloat(v[1]) - inSpeed * 3) > 1e-6)
+            fails.push("relay shows " + v[1] + " out for " + inSpeed + " in, not 3x");
+        });
+      });
+    });
+  });
+
+  // Every LINE_INFO entry has to land on a line that exists, and the line it
+  // quotes has to be that line -- a popup describing the line above it is
+  // worse than no popup.
+  Object.keys(LINE_INFO).forEach(function (key) {
+    Object.keys(LINE_INFO[key]).forEach(function (n) {
+      var info = LINE_INFO[key][n];
+      if (!CODE[key][n]) { fails.push(key + " popup on line " + n + ", which does not exist"); return; }
+      var quoted = info.src.replace(/\s+/g, " ").trim();
+      var actual = CODE[key][n].replace(/\s+/g, " ").trim();
+      if (actual.indexOf(quoted.split("#")[0].trim()) === -1 &&
+          quoted.indexOf(actual.split("#")[0].trim()) === -1)
+        fails.push(key + " popup on line " + n + " quotes something else");
+    });
+  });
+
+  var pts = GRADED.reduce(function (s, r) { return s + (r[2] ? +r[2] : 0); }, 0);
+  if (pts !== 75) fails.push("graded table totals " + pts + ", not the 75 the checker scores");
+
+  var infoCount = Object.keys(LINE_INFO).reduce(function (s, k) {
+    return s + Object.keys(LINE_INFO[k]).length; }, 0);
+
+  document.getElementById("selftest").innerHTML = fails.length
+    ? '<span style="color:#c0392b;font-weight:700">&#x2716; Self-check failed</span> &mdash; ' +
+      fails.slice(0, 6).join("; ")
+    : '<span style="color:#1c7e45;font-weight:700">&#x2714; Self-check passed</span> &mdash; ' +
+      walks + " walks across " + Object.keys(PRESETS).length + " parameter sets: every step lands " +
+      "on a line that exists, every step belongs to a rail entry, all " + infoCount + " line popups " +
+      "quote the line they are filed under, the relay shows exactly 3x its input everywhere, and the " +
+      "graded table adds up to the 75 points check_lab1.py scores.";
+})();
+
+// ---------------------------------------------------------------------------
+// Start
+// ---------------------------------------------------------------------------
+(function start() {
+  var h = location.hash.replace("#", "");
+  if (MODES.indexOf(h) !== -1) state.mode = h;
+  buildFrames();
+  measureRun();
+  render();
+})();
+</script>
+</body>
+</html>
