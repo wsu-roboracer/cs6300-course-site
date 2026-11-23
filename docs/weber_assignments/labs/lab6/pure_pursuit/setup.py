@@ -12,7 +12,7 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        # TODO (Lab 6b, Part 1): install the files in config/, launch/, and maps/ to
+        # TODO (Lab 7, Part 1): install the files in config/, launch/, and maps/ to
         # share/pure_pursuit/config, share/pure_pursuit/launch, and
         # share/pure_pursuit/maps. Use os.path.join() and glob().
     ],
@@ -24,9 +24,9 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            # TODO (Lab 6a, Part 2): register `waypoint_logger`, which runs
+            # TODO (Lab 6, Part 2): register `waypoint_logger`, which runs
             # main() in waypoint_logger.py.
-            # TODO (Lab 6b, Part 1): register `pure_pursuit_node`, which runs
+            # TODO (Lab 7, Part 1): register `pure_pursuit_node`, which runs
             # main() in pure_pursuit_node.py.
         ],
     },

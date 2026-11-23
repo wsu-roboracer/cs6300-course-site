@@ -1,0 +1,62 @@
+{
+  "_comment": "Upstream repositories watched for changes that affect this course. Tiers order the digest; 'branches' overrides the repo default branch. Add or remove entries freely - watch.py reads this file at run time.",
+
+  "tiers": [
+    {
+      "name": "Breaks a lab if it changes",
+      "why": "Student code runs against these. A change here can break a lab mid-semester.",
+      "repos": [
+        { "repo": "f1tenth/f1tenth_gym_ros", "branches": ["dev-jazzy", "main"], "note": "the simulator every sim lab is graded in" },
+        { "repo": "f1tenth/f1tenth_system", "releases": true, "branches": ["jazzy-devel"], "note": "car bringup stack" },
+        { "repo": "Weber-AGV/f1tenth_system", "branches": ["humble-devel"], "note": "our fork of the car stack" },
+        { "repo": "f1tenth/particle_filter", "branches": ["foxy-devel"], "note": "localization for labs 6a and 6b" },
+        { "repo": "f1tenth/range_libc", "note": "particle filter dependency" },
+        { "repo": "f1tenth/vesc", "releases": true, "note": "motor controller driver" },
+        { "repo": "realsenseai/realsense-ros", "releases": true, "branches": ["ros2-master"], "note": "camera driver for lab 7" }
+      ]
+    },
+    {
+      "name": "Rules and competition",
+      "why": "Deadlines and rule changes - the Slack-announcement class of news.",
+      "repos": [
+        { "repo": "f1tenth/roboracer_rules", "note": "official ruleset, updated every competition" },
+        { "repo": "f1tenth/icra2026_race" },
+        { "repo": "f1tenth/iros2026_race" }
+      ]
+    },
+    {
+      "name": "Upstream course content",
+      "why": "Where our labs and the roboracer.ai learn pages come from. Changes here are content we may want to pull in.",
+      "repos": [
+        { "repo": "f1tenth/roboracer-site", "note": "source of roboracer.ai, including the /learn tutorials",
+          "paths": ["public/data/learn-new", "src/components/learn"],
+          "paths_comment": "the site gets heavy front-end churn; these two paths are the learn content and its rendering, which is the part that affects our labs" },
+        { "repo": "f1tenth/f1tenth_doc", "note": "source of the f1tenth docs site" },
+        { "repo": "f1tenth/f1tenth_labs_openrepo", "branches": ["latest"], "note": "live upstream lab assignments" },
+        { "repo": "f1tenth/f1tenth_coursekit", "branches": ["master"], "note": "upstream lecture slides" },
+        { "repo": "f1tenth/f1tenth_lab1_template" },
+        { "repo": "f1tenth/f1tenth_lab2_template" },
+        { "repo": "f1tenth/f1tenth_lab3_template" },
+        { "repo": "f1tenth/f1tenth_lab4_template" },
+        { "repo": "f1tenth/f1tenth_lab5_template" },
+        { "repo": "f1tenth/f1tenth_lab6_template", "note": "upstream motion planning - the source of our Lab 8" },
+        { "repo": "f1tenth/f1tenth_lab7_template" },
+        { "repo": "f1tenth/f1tenth_lab8_template", "note": "upstream is now MPPI, not motion planning" },
+        { "repo": "f1tenth/f1tenth_lab9_template" },
+        { "repo": "f1tenth/f1tenth_lab10_template", "note": "upstream vision lab - the source of our Lab 7" }
+      ]
+    },
+    {
+      "name": "Ecosystem",
+      "why": "Worth knowing about, not urgent.",
+      "repos": [
+        { "repo": "f1tenth/f1tenth_gym", "note": "the gym environment under the ROS bridge" },
+        { "repo": "f1tenth/f1tenth_planning", "note": "reference motion planners" },
+        { "repo": "f1tenth/f1tenth_racetracks" }
+      ]
+    }
+  ],
+
+  "_new_repos_comment": "Watch f1tenth only. Weber-AGV repos are ours, so a new one there is our own work showing up as news.",
+  "new_repos_in_orgs": ["f1tenth"]
+}

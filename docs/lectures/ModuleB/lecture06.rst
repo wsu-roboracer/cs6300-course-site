@@ -8,7 +8,7 @@ Lecture 6 - Vehicle States and Vehicle Dynamics
 	Challenge: How can we model the vehicles longitudinal and lateral behavior so we can have an accurate vehicle simulation
 
 **Learning Outcomes:**
-	- Learn the basic of vehicle dynamics modelling, vehicle dynamics simulation and the most important vehicle states for autonomous driving
+	- Learn the basic of vehicle dynamics modeling, vehicle dynamics simulation and the most important vehicle states for autonomous driving
 
 **Slides:**
 

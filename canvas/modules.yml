@@ -1,12 +1,15 @@
 # Canvas modules, in the order students see them.
-# One module per area covered on the course site: the area's page first, then its lab.
+# One module per area covered on the course site: the area's page first, then its labs.
 #
-# "id" is how the push script recognises a module, so the name can change freely.
+# "id" is how the push script recognizes a module, so the name can change freely.
 #
 # Each item is one of:
 #   page: <id>            a file in canvas/pages/
 #   assignment: <id>      a file in canvas/assignments/
 #   site: <page>          a plain link to a course site page (path under docs/, no extension)
+#
+# Assignments are referred to here by filename. Their Canvas identity is the canvas_key in
+# each file's front matter, so renaming or renumbering a lab does not reach Canvas.
 
 modules:
   - id: start-here
@@ -18,46 +21,66 @@ modules:
     name: ROS 2 and Turtlesim
     items:
       - page: ros2-turtlesim
-      - assignment: lab1
+      - link: https://wsu-roboracer.github.io/cs6300-lab1-walkthrough/
+        title: "Walkthrough: Lab 1 step by step"
+      - assignment: lab1-sim
 
   - id: aeb
     name: Automatic Emergency Braking
     items:
       - page: aeb
-      - assignment: lab2
+      - link: https://wsu-roboracer.github.io/cs6300-lab2-walkthrough/
+        title: "Walkthrough: Lab 2 step by step"
+      - assignment: lab2-sim
+      - assignment: lab2-car
 
   - id: wall-following
     name: Wall Following
     items:
       - page: wall-following
-      - assignment: lab3
+      - assignment: lab3-sim
+      - assignment: lab3-car
 
   - id: follow-the-gap
     name: Follow the Gap
     items:
       - page: follow-the-gap
-      - assignment: lab4
+      - assignment: lab4-sim
+      - assignment: lab4-car
 
   - id: slam
     name: SLAM
     items:
       - page: slam
-      - assignment: lab5
+      - assignment: lab5-sim
+      - assignment: lab5-car
 
-  - id: localization-pure-pursuit
-    name: Particle Filter Localization and Pure Pursuit
+  # Localization and Pure Pursuit were one module holding two pages and two different
+  # labs. They are two areas, so they are two modules, and the break now falls on the
+  # boundary between them rather than inside one module.
+  - id: particle-filter
+    name: Particle Filter Localization
     items:
       - page: particle-filter
-      - page: pure-pursuit
-      - assignment: lab6a
-      - assignment: lab6b
+      - assignment: lab6-sim
+      - assignment: lab6-car
 
-  - id: computer-vision
-    name: Computer Vision
+  - id: pure-pursuit
+    name: Pure Pursuit
     items:
-      - assignment: lab7
+      - page: pure-pursuit
+      - assignment: lab7-sim
+      - assignment: lab7-car
 
   - id: motion-planning
     name: Motion Planning
     items:
-      - assignment: lab8
+      - assignment: lab8-sim
+      - assignment: lab8-car
+
+  # Computer Vision is last by choice. It is the only lab with no simulator part, so it
+  # carries the most generous lock date of the nine.
+  - id: computer-vision
+    name: Computer Vision
+    items:
+      - assignment: lab9-car

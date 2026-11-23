@@ -1,0 +1,111 @@
+{
+  "http://192.168.4.100:3000#14": {
+    "pages": {
+      "aeb": "tutorial-2-automatic-emergency-braking",
+      "follow-the-gap": "tutorial-4-follow-the-gap",
+      "home": "cs-6300-home",
+      "particle-filter": "tutorial-6-particle-filter-localization",
+      "pure-pursuit": "tutorial-7-pure-pursuit",
+      "ros2-turtlesim": "tutorial-1-ros-2-intro-and-turtlesim",
+      "slam": "tutorial-5-slam",
+      "wall-following": "tutorial-3-wall-following"
+    },
+    "assignments": {
+      "lab2a": 910,
+      "lab2b": 911,
+      "lab1": 912,
+      "lab3": 913,
+      "lab4": 914,
+      "lab5": 915,
+      "lab6a": 916,
+      "lab6b": 917,
+      "lab7": 918,
+      "lab8": 919,
+      "lab3a": 920,
+      "lab3b": 921,
+      "lab4a": 922,
+      "lab4b": 923,
+      "lab5a": 924,
+      "lab5b": 925,
+      "lab8a": 926,
+      "lab8b": 927
+    },
+    "modules": {
+      "aeb": 182,
+      "start-here": 183,
+      "ros2-turtlesim": 184,
+      "wall-following": 185,
+      "follow-the-gap": 186,
+      "slam": 187,
+      "localization-pure-pursuit": 188,
+      "computer-vision": 189,
+      "motion-planning": 190
+    },
+    "rubrics": {
+      "lab2a": {
+        "id": 17,
+        "association_id": 18
+      },
+      "lab2b": {
+        "id": 18,
+        "association_id": 19
+      },
+      "lab1": {
+        "id": 19,
+        "association_id": 20
+      },
+      "lab3": {
+        "id": 20,
+        "association_id": 21
+      },
+      "lab4": {
+        "id": 21,
+        "association_id": 22
+      },
+      "lab5": {
+        "id": 22,
+        "association_id": 23
+      },
+      "lab6a": {
+        "id": 23,
+        "association_id": 24
+      },
+      "lab6b": {
+        "id": 24,
+        "association_id": 25
+      },
+      "lab7": {
+        "id": 25,
+        "association_id": 26
+      },
+      "lab3a": {
+        "id": 26,
+        "association_id": 27
+      },
+      "lab3b": {
+        "id": 27,
+        "association_id": 28
+      },
+      "lab4a": {
+        "id": 28,
+        "association_id": 29
+      },
+      "lab4b": {
+        "id": 29,
+        "association_id": 30
+      },
+      "lab5a": {
+        "id": 30,
+        "association_id": 31
+      },
+      "lab5b": {
+        "id": 31,
+        "association_id": 32
+      },
+      "lab8b": {
+        "id": 32,
+        "association_id": 33
+      }
+    }
+  }
+}

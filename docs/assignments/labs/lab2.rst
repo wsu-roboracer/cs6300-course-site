@@ -6,7 +6,7 @@ Lab 2 - Automatic Emergency Braking
 .. tip:: Before starting this lab, review :ref:`Lecture 2 <doc_lecture02>` to ensure you are familiar with the material.
 
 .. | **Goals:**
-.. | The goal of this lab is to develop a safety node for the race cars that will stop the car from collision when travelling at higher velocities. We will implement Time to Collision using the LaserScan message in the simulator. 
+.. | The goal of this lab is to develop a safety node for the race cars that will stop the car from collision when traveling at higher velocities. We will implement Time to Collision using the LaserScan message in the simulator. 
 
 .. | **Learning Outcomes:**
 .. | The following fundamentals should be understood by the students upon completion of this lab:

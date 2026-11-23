@@ -1,4 +1,4 @@
-# Lab 7: Computer Vision
+# Lab 9: Computer Vision
 
 Replace every `(FILL ME IN)`. The course staff grade from this file, your code and your video.
 

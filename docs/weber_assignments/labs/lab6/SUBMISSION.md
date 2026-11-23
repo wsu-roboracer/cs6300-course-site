@@ -1,6 +1,6 @@
 # Lab 6: Waypoint Logger and Pure Pursuit
 
-## Lab 6a: Waypoint Logger
+## Lab 6: Waypoint Logger
 
 Commit these with your code:
 
@@ -9,11 +9,11 @@ Commit these with your code:
 
 ![Logger running](images/logger_running.png)
 
-## Lab 6b: Pure Pursuit
+## Lab 7: Pure Pursuit
 
 ### Video
 
-One full autonomous lap: a screen recording of RViz2 together with the real car. Upload it to YouTube (unlisted) or Google Drive, shared as "Anyone with the link can view".
+One full autonomous lap: a screen recording of RViz2 together with the real car. Upload it to YouTube as unlisted.
 
 Video link: (FILL ME IN)
 

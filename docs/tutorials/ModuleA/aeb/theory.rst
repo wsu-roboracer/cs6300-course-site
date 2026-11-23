@@ -13,7 +13,7 @@ AEB Theory of Operation
 2️⃣ Overview
 ~~~~~~~~~~~~
 
-The goal of this lab is to develop a safety node for the race cars that will stop the car from collision when travelling at higher velocities. We will implement Time to Collision (TTC) using the ``LaserScan`` message in the simulator.
+The goal of this lab is to develop a safety node for the race cars that will stop the car from collision when traveling at higher velocities. We will implement Time to Collision (TTC) using the ``LaserScan`` message in the simulator.
 
 For different commonly used ROS 2 messages you can use ``ros2 interface show <msg_name>`` to see the definition of messages. Note for messages that are not installed by default by the distro, you'll have to first install it for this to work.
 

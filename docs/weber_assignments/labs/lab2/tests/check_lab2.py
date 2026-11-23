@@ -54,17 +54,17 @@ ANGLES = [ANGLE_MIN + i * ANGLE_INCREMENT for i in range(BEAMS)]
 # -- Scans --------------------------------------------------------------------
 
 def wall_ahead(distance):
-    """A wall across the car's path, `distance` metres in front of it."""
+    """A wall across the car's path, `distance` meters in front of it."""
     return [min(distance / math.cos(a), RANGE_MAX) if abs(a) < math.pi / 2 else RANGE_MAX for a in ANGLES]
 
 
 def hallway(half_width):
-    """A straight hallway with a wall `half_width` metres to each side and nothing ahead."""
+    """A straight hallway with a wall `half_width` meters to each side and nothing ahead."""
     return [min(half_width / abs(math.sin(a)), RANGE_MAX) if math.sin(a) else RANGE_MAX for a in ANGLES]
 
 
 def object_beside(distance):
-    """Open space, except for something `distance` metres directly to the car's left."""
+    """Open space, except for something `distance` meters directly to the car's left."""
     return [distance if abs(a - math.pi / 2) < math.radians(2) else RANGE_MAX for a in ANGLES]
 
 

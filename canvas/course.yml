@@ -5,6 +5,18 @@
 term: Spring 2027
 time_zone: America/Denver     # due dates in canvas/assignments/ are in this zone
 
+# The semester, which is the one thing that changes every time the course runs.
+# check_sync.py fails if any due or lock date falls outside the term or inside the
+# break, which is what stops a date from quietly landing in a week with no classes.
+calendar:
+  starts: 2027-01-11          # Monday of week 1
+  ends: 2027-04-26
+  break:
+    starts: 2027-03-08
+    ends: 2027-03-12
+  # Lab parts are due on Sundays, lectures are Wednesdays and car days are Mondays.
+  due_weekday: sunday
+
 canvas:
   # .env overrides base_url and course_id (CANVAS_API_URL, CANVAS_COURSE_ID),
   # so these are only the defaults.
@@ -15,6 +27,15 @@ canvas:
   publish: false
   # Canvas group set that team labs are assigned to. Created empty if missing.
   team_group_set: Lab Teams
+  # Canvas applies this to the whole course; it cannot be set per assignment. Sim parts
+  # absorb it, which is the point: a student who has not written their node before the
+  # car day has nothing to port and holds up their team. Car parts are due at the end of
+  # the slack window they already had, so Canvas never marks one late.
+  late_policy:
+    percent_per_day: 10
+    # No lowest-possible-grade floor. At 10% a day the deduction reaches zero on day 10,
+    # and every lock date is due + 14 days, so the assignment closes after that.
+    lowest_possible_grade: null
 
 site:
   base_url: https://wsu-roboracer.github.io/cs6300-course-site
@@ -35,6 +56,12 @@ site:
 repo_creator:
   base_url: https://hadzikcs.netlify.app/gh
   course: sh/CS6300
+  # The course passcode is NOT here on purpose: this repository is public. It is read
+  # from $REPO_CREATOR_PASSCODE in .env (gitignored) and written into the Canvas
+  # assignment pages at push time, so students read it in Canvas, behind a login.
+  # Source of truth is the creator's own config, courses.CS6300.passcode in
+  # github_student_repo_setup/instructors/scotthadzik.json. If it changes there,
+  # change it in .env. See canvas/README.md.
 
 # Where the student-facing lab repos live. Each lab folder in this repo
 # (an assignment's repo_folder) is pushed to <org>/<repo_task> by
@@ -47,8 +74,11 @@ lab_repos:
   # the lab repo's solutions branch. The path is relative to the repo root.
   solutions_dir: ../../solutions
 
-# Canvas assignment groups. Weights are placeholders until the Spring 2027
-# grade breakdown is set; they must total 100.
+# Canvas assignment groups. Labs are the whole grade, so the weight is 100 and the
+# breakdown is the points themselves: every lab part is worth 100, except Computer
+# Vision, which is one 200-point part because it is a full lab's work with no simulator
+# part to split off. Lab 1 is the only 100-point lab - week one is also everyone's
+# ROS 2 install week. That totals 1800 points across nine labs.
 assignment_groups:
   - name: Labs
     weight: 100

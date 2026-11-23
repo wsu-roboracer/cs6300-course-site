@@ -27,14 +27,29 @@ def print_modules(data):
     print()
 
 
+def print_calendar(data):
+    """Print the semester that the week numbers resolve against."""
+    calendar = data.course.get('calendar')
+    if not calendar:
+        return
+    last = data.last_week()
+    print(f'{data.course["term"]}: {calendar["starts"]} to {calendar["ends"]}, {last} weeks')
+    if brk := calendar.get('break'):
+        print(f'break: {brk["starts"]} to {brk["ends"]}')
+    print(f'week 1 is due {data.week_sunday(1)}, week {last} is due {data.week_sunday(last)}')
+    print()
+
+
 def print_assignments(data):
-    rows = [('ID', 'Title', 'Points', 'Due', 'Team', 'Repo task')]
+    rows = [('ID', 'Title', 'Points', 'Week', 'Due', 'Lock', 'Team', 'Repo task')]
     for key, a in data.assignments.items():
         rows.append((
             key,
             a['title'] or '?',
             'TBD' if a.get('points') is None else str(a['points']),
+            'TBD' if a.get('due_week') is None else str(a['due_week']),
             'TBD' if a.get('due') is None else str(a['due']),
+            'TBD' if a.get('lock') is None else str(a['lock']),
             'yes' if a.get('team') else 'no',
             a.get('repo_task') or '-',
         ))
@@ -67,6 +82,7 @@ def main():
 
     data = CourseData()
     if args.list:
+        print_calendar(data)
         print_modules(data)
         print_assignments(data)
     return report(data)

@@ -5,12 +5,12 @@ Lecture 9 - Introduction to Graph-based SLAM
 ============================================
 
 **Overview:** 
-	This lecture is on graph based Simultaneous Localisation and Mapping (SLAM)
+	This lecture is on graph based Simultaneous Localization and Mapping (SLAM)
 
 **Topics Covered:**
 	-	Localization
     -   Mapping
-    -   Simultaneous Localisation and Mapping (SLAM)
+    -   Simultaneous Localization and Mapping (SLAM)
 
 **Associated Tutorial:**
 	.. toctree::

@@ -61,6 +61,33 @@ The push script adds a button that opens the lab on the site and a button that o
 
 If `rubric_source` is set and that file contains a `Total: N Points` line, `points` must match it.
 
+## The repo creator passcode
+
+The repo creator asks a student for their GitHub username and a **course passcode**. The push
+script writes that passcode into the "Get your repository" steps on every assignment that
+creates a repository, so students read it in Canvas - which is where the creator page tells
+them to look.
+
+The passcode is read from `$REPO_CREATOR_PASSCODE`, set in `.env` at the repository root:
+
+```sh
+REPO_CREATOR_PASSCODE=the-passcode-for-this-term
+```
+
+**Never put it in `course.yml`.** This repository is public, and the passcode is the only
+thing stopping anyone on the internet from creating repositories in the `Weber-AGV`
+organization. `.env` is gitignored; `course.yml` is not. This is the same reason
+`lab_repos.solutions_dir` points outside the repository.
+
+Without it, pushing still works: the steps say to ask the instructor for the passcode, and
+`check_sync.py` warns. That is the right behavior for a dry run on a machine that has no
+secrets, but check for the warning before a real push, or students get a page that cannot
+tell them the passcode.
+
+Change the passcode each term by editing `.env` and pushing again. Assignments that continue
+an earlier repository (`repo_continues`) show no passcode at all, because there is nothing
+for those students to create.
+
 ## Lab repositories
 
 There are no submodules. Each lab's starter files live in a plain folder in this repo, named by the assignment's `repo_folder`. That folder is the source of truth. `sync_lab_repo.py` pushes it to the lab's own GitHub repo, `<org>/<repo_task>`, which is the template students get a copy of. This is the same arrangement CS 1400 uses.
