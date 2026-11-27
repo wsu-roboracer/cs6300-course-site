@@ -78,7 +78,7 @@ lab_repos:
 # breakdown is the points themselves: every lab part is worth 100, except Computer
 # Vision, which is one 200-point part because it is a full lab's work with no simulator
 # part to split off. Lab 1 is the only 100-point lab - week one is also everyone's
-# ROS 2 install week. That totals 1800 points across nine labs.
+# ROS 2 install week. That totals 1700 points across nine labs.
 assignment_groups:
   - name: Labs
     weight: 100

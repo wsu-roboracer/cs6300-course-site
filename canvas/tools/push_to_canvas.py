@@ -90,7 +90,9 @@ class Pusher:
             headers={'Authorization': f'Bearer {self.token}'},
         )
         with urllib.request.urlopen(request, timeout=30) as response:
-            return json.load(response)
+            # Canvas answers an update with 204 and no body, so there is nothing to parse.
+            body = response.read()
+            return json.loads(body) if body else {}
 
     # Rating ladders, widest first. A criterion worth a lot is worth more steps; a
     # small one does not need five. Each entry is (fraction of the points, label).

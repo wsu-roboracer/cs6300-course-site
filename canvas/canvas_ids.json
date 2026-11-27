@@ -11,24 +11,22 @@
       "wall-following": "tutorial-3-wall-following"
     },
     "assignments": {
-      "lab2a": 910,
-      "lab2b": 911,
-      "lab1": 912,
-      "lab3": 913,
-      "lab4": 914,
-      "lab5": 915,
-      "lab6a": 916,
-      "lab6b": 917,
-      "lab7": 918,
-      "lab8": 919,
-      "lab3a": 920,
-      "lab3b": 921,
-      "lab4a": 922,
-      "lab4b": 923,
-      "lab5a": 924,
-      "lab5b": 925,
-      "lab8a": 926,
-      "lab8b": 927
+      "lab1-sim": 995,
+      "lab2-car": 996,
+      "lab2-sim": 997,
+      "lab3-car": 998,
+      "lab3-sim": 999,
+      "lab4-car": 1000,
+      "lab4-sim": 1001,
+      "lab5-car": 1002,
+      "lab5-sim": 1003,
+      "lab6-car": 1004,
+      "lab6-sim": 1005,
+      "lab7-car": 1006,
+      "lab7-sim": 1007,
+      "lab8-car": 1008,
+      "lab8-sim": 1009,
+      "lab9-car": 1010
     },
     "modules": {
       "aeb": 182,
@@ -37,74 +35,75 @@
       "wall-following": 185,
       "follow-the-gap": 186,
       "slam": 187,
-      "localization-pure-pursuit": 188,
       "computer-vision": 189,
-      "motion-planning": 190
+      "motion-planning": 190,
+      "particle-filter": 201,
+      "pure-pursuit": 202
     },
     "rubrics": {
-      "lab2a": {
-        "id": 17,
-        "association_id": 18
+      "lab1-sim": {
+        "id": 71,
+        "association_id": 72
       },
-      "lab2b": {
-        "id": 18,
-        "association_id": 19
+      "lab2-car": {
+        "id": 72,
+        "association_id": 73
       },
-      "lab1": {
-        "id": 19,
-        "association_id": 20
+      "lab2-sim": {
+        "id": 73,
+        "association_id": 74
       },
-      "lab3": {
-        "id": 20,
-        "association_id": 21
+      "lab3-car": {
+        "id": 74,
+        "association_id": 75
       },
-      "lab4": {
-        "id": 21,
-        "association_id": 22
+      "lab3-sim": {
+        "id": 75,
+        "association_id": 76
       },
-      "lab5": {
-        "id": 22,
-        "association_id": 23
+      "lab4-car": {
+        "id": 76,
+        "association_id": 77
       },
-      "lab6a": {
-        "id": 23,
-        "association_id": 24
+      "lab4-sim": {
+        "id": 77,
+        "association_id": 78
       },
-      "lab6b": {
-        "id": 24,
-        "association_id": 25
+      "lab5-car": {
+        "id": 78,
+        "association_id": 79
       },
-      "lab7": {
-        "id": 25,
-        "association_id": 26
+      "lab5-sim": {
+        "id": 79,
+        "association_id": 80
       },
-      "lab3a": {
-        "id": 26,
-        "association_id": 27
+      "lab6-car": {
+        "id": 80,
+        "association_id": 81
       },
-      "lab3b": {
-        "id": 27,
-        "association_id": 28
+      "lab6-sim": {
+        "id": 81,
+        "association_id": 82
       },
-      "lab4a": {
-        "id": 28,
-        "association_id": 29
+      "lab7-car": {
+        "id": 82,
+        "association_id": 83
       },
-      "lab4b": {
-        "id": 29,
-        "association_id": 30
+      "lab7-sim": {
+        "id": 83,
+        "association_id": 84
       },
-      "lab5a": {
-        "id": 30,
-        "association_id": 31
+      "lab8-car": {
+        "id": 84,
+        "association_id": 85
       },
-      "lab5b": {
-        "id": 31,
-        "association_id": 32
+      "lab8-sim": {
+        "id": 85,
+        "association_id": 86
       },
-      "lab8b": {
-        "id": 32,
-        "association_id": 33
+      "lab9-car": {
+        "id": 86,
+        "association_id": 87
       }
     }
   }
